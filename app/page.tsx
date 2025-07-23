@@ -374,7 +374,7 @@ export default function LandingPage() {
                     {[
                       {
                         name: "MyPen Starter",
-                        price: "უფას���",
+                        price: "უფასო",
                         description: "ყველა საბაზისო ინსტრუმენტი AI-სთან მუშაობის დასაწყებად.",
                         features: [
                           { text: "წვდომა MyPen Light მოდელზე", included: true },
