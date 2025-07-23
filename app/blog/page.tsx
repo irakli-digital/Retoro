@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getPublishedPosts } from "@/lib/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User } from "lucide-react";
+import { Calendar, User, ArrowRight } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import AnnouncementBanner from "@/components/announcement-banner";
@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "ბლოგი | Mypen.ge",
   description: "AI-ს სამყაროს სიახლეები და რჩევები",
 };
+
+// Revalidate every 60 seconds - fresh content without full rebuild
+export const revalidate = 60;
 
 export default async function BlogPage() {
   const posts = await getPublishedPosts();
@@ -36,45 +39,48 @@ export default async function BlogPage() {
               <p className="text-muted-foreground">ჯერ არ არის ბლოგ პოსტები.</p>
             </div>
           ) : (
-            <div className="grid gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`}>
-                  <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
+                  <Card className="h-full transition-all hover:shadow-md hover:-translate-y-1 group">
                     {post.featured_image && (
-                      <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                      <div className="aspect-[16/9] relative overflow-hidden rounded-t-lg">
                         <img
                           src={post.featured_image}
                           alt={post.title_ka}
-                          className="object-cover w-full h-full"
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}
-                    <CardHeader>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                        {post.author && (
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            <span>{post.author}</span>
-                          </div>
-                        )}
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <time dateTime={post.published_at.toISOString()}>
-                            {format(new Date(post.published_at), "d MMMM, yyyy", { locale: ka })}
+                          <Calendar className="h-3 w-3" />
+                          <time dateTime={new Date(post.published_at).toISOString()}>
+                            {format(new Date(post.published_at), "d MMM", { locale: ka })}
                           </time>
                         </div>
+                        {post.author && (
+                          <>
+                            <span>•</span>
+                            <span>{post.author}</span>
+                          </>
+                        )}
                       </div>
-                      <CardTitle className="text-2xl">{post.title_ka}</CardTitle>
+                      <CardTitle className="text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                        {post.title_ka}
+                      </CardTitle>
                       {post.excerpt_ka && (
-                        <CardDescription className="text-base mt-2">
+                        <CardDescription className="text-sm mt-2 line-clamp-3">
                           {post.excerpt_ka}
                         </CardDescription>
                       )}
                     </CardHeader>
-                    <CardContent>
-                      <Badge variant="secondary" className="hover:bg-secondary">
-                        წაიკითხე მეტი →
-                      </Badge>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center text-sm text-primary font-medium group-hover:gap-2 transition-all">
+                        <span>წაიკითხე მეტი</span>
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>

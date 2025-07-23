@@ -25,6 +25,12 @@ export async function generateStaticParams() {
   }));
 }
 
+// Revalidate every 60 seconds - fresh content without full rebuild  
+export const revalidate = 60;
+
+// Generate static params at build time, but allow new ones at runtime
+export const dynamicParams = true;
+
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const post = await getPostBySlug(params.slug);
   
@@ -91,7 +97,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               )}
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <time dateTime={post.published_at.toISOString()}>
+                <time dateTime={new Date(post.published_at).toISOString()}>
                   {format(new Date(post.published_at), "d MMMM, yyyy", { locale: ka })}
                 </time>
               </div>
@@ -105,7 +111,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <Separator className="mb-8" />
 
           <div 
-            className="prose prose-lg dark:prose-invert max-w-none"
+            className="article-content"
             dangerouslySetInnerHTML={{ __html: post.content_ka }}
           />
 

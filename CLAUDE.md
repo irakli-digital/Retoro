@@ -5,13 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Development
-- `pnpm dev` - Start the development server at http://localhost:3000
-- `pnpm build` - Build the application for production
-- `pnpm start` - Start the production server
-- `pnpm lint` - Run ESLint to check for code issues
+- `npm run dev` - Start the development server at http://localhost:3000
+- `npm run build` - Build the application for production
+- `npm run start` - Start the production server
+- `npm run lint` - Run ESLint to check for code issues
 
 ### Package Management
-This project uses pnpm as the package manager. Always use `pnpm` instead of `npm` or `yarn`.
+This project uses npm as the package manager. Always use `npm` instead of `pnpm` or `yarn`.
 
 ## Architecture
 

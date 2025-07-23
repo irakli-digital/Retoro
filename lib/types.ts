@@ -8,8 +8,8 @@ export interface BlogPost {
   excerpt: string | null;
   excerpt_ka: string | null;
   author: string | null;
-  published_at: Date;
-  updated_at: Date;
+  published_at: string | Date; // Database returns string, can be converted to Date
+  updated_at: string | Date;
   published: boolean;
   featured_image: string | null;
 }

@@ -1,34 +1,49 @@
 import { sql } from './db';
 import type { BlogPost, BlogPostPreview } from './types';
+import { unstable_cache } from 'next/cache';
 
-export async function getPublishedPosts(limit?: number): Promise<BlogPostPreview[]> {
-  const result = limit
-    ? await sql`
-        SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
-        FROM posts 
-        WHERE published = true 
-        ORDER BY published_at DESC 
-        LIMIT ${limit}
-      `
-    : await sql`
-        SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
-        FROM posts 
-        WHERE published = true 
-        ORDER BY published_at DESC
-      `;
-  
-  return result as BlogPostPreview[];
-}
+export const getPublishedPosts = unstable_cache(
+  async (limit?: number): Promise<BlogPostPreview[]> => {
+    const result = limit
+      ? await sql`
+          SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
+          FROM posts 
+          WHERE published = true 
+          ORDER BY published_at DESC 
+          LIMIT ${limit}
+        `
+      : await sql`
+          SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
+          FROM posts 
+          WHERE published = true 
+          ORDER BY published_at DESC
+        `;
+    
+    return result as BlogPostPreview[];
+  },
+  ['blog-posts'],
+  {
+    tags: ['blog-posts'],
+    revalidate: 60 // 60 seconds
+  }
+);
 
-export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
-  const result = await sql`
-    SELECT * FROM posts 
-    WHERE slug = ${slug} AND published = true 
-    LIMIT 1
-  `;
-  
-  return result[0] as BlogPost || null;
-}
+export const getPostBySlug = unstable_cache(
+  async (slug: string): Promise<BlogPost | null> => {
+    const result = await sql`
+      SELECT * FROM posts 
+      WHERE slug = ${slug} AND published = true 
+      LIMIT 1
+    `;
+    
+    return result[0] as BlogPost || null;
+  },
+  ['blog-post'],
+  {
+    tags: ['blog-posts'],
+    revalidate: 60 // 60 seconds
+  }
+);
 
 export async function getAllPostSlugs(): Promise<{ slug: string }[]> {
   const result = await sql`
