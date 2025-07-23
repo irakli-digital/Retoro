@@ -3,8 +3,8 @@ import "@/styles/globals.css"
 import { Inter } from "next/font/google"
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
-import Script from "next/script"
 import AnnouncementBanner from "@/components/announcement-banner"
+import { BeforeInteractiveScripts, AfterInteractiveScripts, LazyScripts } from "@/components/ScriptInjector"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -48,11 +48,19 @@ export default function RootLayout({
   return (
     <html lang="ka" suppressHydrationWarning>
       <head>
+        {/* Scripts that need to load before page becomes interactive */}
+        <BeforeInteractiveScripts />
       </head>
       <body className={inter.className}>
+        {/* Scripts that load after page becomes interactive */}
+        <AfterInteractiveScripts />
+        
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           {children}
         </ThemeProvider>
+        
+        {/* Scripts that load lazily when page is idle */}
+        <LazyScripts />
       </body>
     </html>
   )
