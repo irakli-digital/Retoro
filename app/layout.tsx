@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
+import AnnouncementBanner from "@/components/announcement-banner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,16 +23,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ka" className="dark" suppressHydrationWarning>
+    <html lang="ka" suppressHydrationWarning>
       <head>
-        <Script id="prevent-flash" strategy="beforeInteractive">
-          {`
-            (function() {
-              // Apply dark mode immediately to prevent flash
-              document.documentElement.classList.add('dark');
-            })();
-          `}
-        </Script>
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>

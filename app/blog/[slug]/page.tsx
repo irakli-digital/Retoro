@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calendar, User, Clock } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import AnnouncementBanner from "@/components/announcement-banner";
 import { format } from "date-fns";
 import { ka } from "date-fns/locale";
 
@@ -55,6 +56,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
+      <AnnouncementBanner />
       <Header />
       <main className="container mx-auto px-4 py-16">
         <article className="mx-auto max-w-3xl">
