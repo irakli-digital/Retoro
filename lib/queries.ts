@@ -1,5 +1,5 @@
 import { sql } from './db';
-import type { BlogPost, BlogPostPreview } from './types';
+import type { BlogPost, BlogPostPreview, FAQ } from './types';
 import { unstable_cache } from 'next/cache';
 
 export const getPublishedPosts = unstable_cache(
@@ -64,3 +64,45 @@ export async function getFeaturedPosts(limit: number = 3): Promise<BlogPostPrevi
   
   return result as BlogPostPreview[];
 }
+
+// FAQ queries
+export const getPublishedFAQs = unstable_cache(
+  async (category?: string): Promise<FAQ[]> => {
+    const result = category
+      ? await sql`
+          SELECT * FROM faqs 
+          WHERE published = true AND category = ${category}
+          ORDER BY sort_order ASC, created_at ASC
+        `
+      : await sql`
+          SELECT * FROM faqs 
+          WHERE published = true 
+          ORDER BY sort_order ASC, created_at ASC
+        `;
+    
+    return result as FAQ[];
+  },
+  ['faqs'],
+  {
+    tags: ['faqs'],
+    revalidate: 60 // 60 seconds
+  }
+);
+
+export const getFAQCategories = unstable_cache(
+  async (): Promise<{ category: string; category_ka: string }[]> => {
+    const result = await sql`
+      SELECT DISTINCT category, category_ka 
+      FROM faqs 
+      WHERE published = true AND category IS NOT NULL
+      ORDER BY category ASC
+    `;
+    
+    return result as { category: string; category_ka: string }[];
+  },
+  ['faq-categories'],
+  {
+    tags: ['faqs'],
+    revalidate: 60 // 60 seconds
+  }
+);

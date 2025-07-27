@@ -18,3 +18,17 @@ export type BlogPostPreview = Pick<
   BlogPost,
   'id' | 'title' | 'title_ka' | 'slug' | 'excerpt' | 'excerpt_ka' | 'published_at' | 'author' | 'featured_image'
 >;
+
+export interface FAQ {
+  id: number;
+  question: string;
+  question_ka: string;
+  answer: string;
+  answer_ka: string;
+  category: string | null;
+  category_ka: string | null;
+  sort_order: number;
+  published: boolean;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
