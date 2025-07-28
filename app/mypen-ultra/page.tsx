@@ -83,11 +83,11 @@ export default function LandingPage() {
                 AI წერა სტრესის გარეშე
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                {"Mypen ULTRA - ᲓᲐᲖᲝᲒᲔ ᲓᲠᲝ. ᲬᲔᲠᲔ ᲣᲙᲔᲗᲔᲡᲐᲓ"}
+                {"Mypen ULTRA - უსაზღვრო შესაძლებლობები"}
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 {
-                  "დაივიწყე წერის სირთულეები, ენობრივი ბარიერები და გრამატიკული შეცდომები. MyPen-ი შენი პირადი დამხმარეა, რომელიც ტექსტებთან მუშაობას სასიამოვნოს ხდის."
+                  "Mypen ULTRA სცდება წერის საზღვრებს. ის თქვენი უნივერსალური ასისტენტია, რომელიც შექმნილია შეუზღუდავი პროდუქტიულობისთვის. დაგეგმეთ მოგზაურობა, მართეთ პროექტები, დაწერეთ კოდი თუ უბრალოდ მოაწესრიგეთ ყოველდღიური საქმეები — ULTRA ამ ყველაფერს ამარტივებს."
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -101,7 +101,7 @@ export default function LandingPage() {
                     }
                   }}
                 >
-                  დარეგისტრირდი
+                  გაიაქტიურე
                 </Button>
               </div>
               <div className="flex items-center justify-center gap-4 mt-6 text-sm text-muted-foreground">
@@ -303,7 +303,7 @@ export default function LandingPage() {
                   სამივე მოდელი ერთად
                 </Badge>
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                  3 AI მოდელი = 1 შეუძლებელი ღირებულება
+                  3 AI მოდელი = შეუძლებელი არაფერია
                 </h2>
                 <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
                   Mypen ULTRA-ით იღებთ წვდომას ყველა ჩვენს მოდელზე. არ გჭირდებათ ცალ-ცალკე გამოწერების შეძენა.
@@ -332,26 +332,26 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold mb-2">Mypen Light</h3>
                       <p className="text-muted-foreground text-sm mb-4">ყველა საბაზისო ინსტრუმენტი AI-სთან მუშაობის დასაწყებად.</p>
                     </div>
-                    <ul className="text-left text-sm space-y-2">
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>სწრაფი პასუხები</span>
+                    <ul className="text-left text-base md:text-sm space-y-4 md:space-y-3">
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">სწრაფი პასუხები</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>ძირითადი ტექსტის შედგენა</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">ძირითადი ტექსტის შედგენა</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>მარტივი თარგმნა</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">მარტივი თარგმნა</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>ყოველდღიური კითხვები</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">ყოველდღიური კითხვები</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>ენერგოეფექტური</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">ენერგოეფექტური</span>
                       </li>
                     </ul>
                   </div>
@@ -378,26 +378,26 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold mb-2">Mypen PRO</h3>
                       <p className="text-muted-foreground text-sm mb-4">მაღალი ხარისხის კონტენტის სწრაფად შესაქმნელად.</p>
                     </div>
-                    <ul className="text-left text-sm space-y-2">
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>გაუმჯობესებული ანალიზი</span>
+                    <ul className="text-left text-base md:text-sm space-y-4 md:space-y-3">
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">გაუმჯობესებული ანალიზი</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>კრეატიული წერა</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">კრეატიული წერა</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>კოდის გენერაცია</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">კოდის გენერაცია</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>დოკუმენტების ანალიზი</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">დოკუმენტების ანალიზი</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>მაღალი ზუსტობა</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">მაღალი ზუსტობა</span>
                       </li>
                     </ul>
                   </div>
@@ -424,26 +424,26 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold mb-2">Mypen ULTRA</h3>
                       <p className="text-muted-foreground text-sm mb-4">შეუზღუდავი შემოქმედებისა და რთული ამოცანებისთვის.</p>
                     </div>
-                    <ul className="text-left text-sm space-y-2">
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>შეუზღუდავი ტოკენები</span>
+                    <ul className="text-left text-base md:text-sm space-y-4 md:space-y-3">
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">შეუზღუდავი ტოკენები</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>ყველაზე მოწინავე AI მოდელი</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">ყველაზე მოწინავე AI მოდელი</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>რეალურ დროში ვებ ძიება</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">რეალურ დროში ვებ ძიება</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>დიდი ფაილების ანალიზი</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">დიდი ფაილების ანალიზი</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1 h-1 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>პრიორიტეტული მხარდაჭერა</span>
+                      <li className="flex items-start gap-4">
+                        <div className="w-3 h-3 md:w-2 md:h-2 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <span className="flex-1 leading-relaxed font-medium">პრიორიტეტული მხარდაჭერა</span>
                       </li>
                     </ul>
                   </div>
@@ -705,7 +705,7 @@ export default function LandingPage() {
                             className="w-full mt-auto rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 py-4 h-auto text-xl font-semibold"
                             asChild
                           >
-                            <Link href="https://chat.mypen.ge">გახდი Mypen ULTRA</Link>
+                            <Link href="https://chat.mypen.ge?utm_source=web&utm_campaing=ultra-landing">გახდი Mypen ULTRA</Link>
                           </Button>
                         </CardContent>
                       </Card>
