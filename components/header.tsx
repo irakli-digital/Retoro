@@ -8,7 +8,13 @@ import { Menu, X, Moon, Sun, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 
-export default function Header() {
+interface HeaderProps {
+  hideLoginButton?: boolean
+  hideNavigation?: boolean
+  notSticky?: boolean
+}
+
+export default function Header({ hideLoginButton = false, hideNavigation = false, notSticky = false }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -38,7 +44,7 @@ export default function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full backdrop-blur-lg transition-all duration-300 ${isScrolled ? "bg-background/80 shadow-sm" : "bg-transparent"}`}
+      className={`${notSticky ? '' : 'sticky top-0'} z-50 w-full backdrop-blur-lg transition-all duration-300 ${isScrolled ? "bg-background/80 shadow-sm" : "bg-transparent"}`}
     >
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold">
@@ -51,50 +57,54 @@ export default function Header() {
             priority
           />
         </Link>
-        <nav className="hidden md:flex gap-8">
-          <Link
-            href="/#features"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            მახასიათებლები
-          </Link>
-          <Link
-            href="/#testimonials"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            გამოხმაურებები
-          </Link>
-          <Link
-            href="/#pricing"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            ფასი
-          </Link>
-          <Link
-            href="/blog"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            ბლოგი
-          </Link>
-          <Link
-            href="/#faq"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            FAQ
-          </Link>
-        </nav>
+        {!hideNavigation && (
+          <nav className="hidden md:flex gap-8">
+            <Link
+              href="/#features"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              მახასიათებლები
+            </Link>
+            <Link
+              href="/#testimonials"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              გამოხმაურებები
+            </Link>
+            <Link
+              href="/#pricing"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              ფასი
+            </Link>
+            <Link
+              href="/blog"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              ბლოგი
+            </Link>
+            <Link
+              href="/#faq"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              FAQ
+            </Link>
+          </nav>
+        )}
         <div className="hidden md:flex gap-4 items-center">
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
             {isDarkTheme ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <Button variant="default" className="rounded-full" asChild>
-            <Link href="https://chat.mypen.ge">
-              შესვლა
-              <ChevronRight className="ml-1 size-4" />
-            </Link>
-          </Button>
+          {!hideLoginButton && (
+            <Button variant="default" className="rounded-full" asChild>
+              <Link href="https://chat.mypen.ge">
+                შესვლა
+                <ChevronRight className="ml-1 size-4" />
+              </Link>
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-4 md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -115,30 +125,36 @@ export default function Header() {
           className="md:hidden absolute top-16 inset-x-0 bg-background/95 backdrop-blur-lg border-b"
         >
           <div className="container py-4 flex flex-col gap-4">
-            <Link href="/#features" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-              მახასიათებლები
-            </Link>
-            <Link href="/#testimonials" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-              გამოხმაურებები
-            </Link>
-            <Link href="/#pricing" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-              ფასი
-            </Link>
-            <Link href="/blog" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-              ბლოგი
-            </Link>
-            <Link href="/#faq" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-              FAQ
-            </Link>
-            <div className="flex flex-col gap-2 pt-2 border-t">
-              <Link href="#" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
-                შესვლა
-              </Link>
-              <Button variant="default" className="rounded-full">
-                შესვლა
-                <ChevronRight className="ml-1 size-4" />
-              </Button>
-            </div>
+            {!hideNavigation && (
+              <>
+                <Link href="/#features" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  მახასიათებლები
+                </Link>
+                <Link href="/#testimonials" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  გამოხმაურებები
+                </Link>
+                <Link href="/#pricing" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  ფასი
+                </Link>
+                <Link href="/blog" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  ბლოგი
+                </Link>
+                <Link href="/#faq" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  FAQ
+                </Link>
+              </>
+            )}
+            {!hideLoginButton && (
+              <div className="flex flex-col gap-2 pt-2 border-t">
+                <Link href="#" className="py-2 text-sm font-medium" onClick={() => setMobileMenuOpen(false)}>
+                  შესვლა
+                </Link>
+                <Button variant="default" className="rounded-full">
+                  შესვლა
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}

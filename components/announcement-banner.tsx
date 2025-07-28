@@ -1,6 +1,12 @@
 import { AlertTriangle } from "lucide-react"
 
-export default function AnnouncementBanner() {
+interface AnnouncementBannerProps {
+  hide?: boolean
+}
+
+export default function AnnouncementBanner({ hide = false }: AnnouncementBannerProps) {
+  if (hide) return null
+  
   return (
     <div className="relative bg-amber-500 dark:bg-green-600 text-white">
       <div className="container flex items-center justify-center py-3 px-4">
