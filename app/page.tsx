@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Check, ArrowRight, Star, Zap, BarChart, Globe, Brain, Languages, LifeBuoy, X } from "lucide-react"
+import { Check, ArrowRight, Star, Zap, BarChart, Globe, Brain, Languages, LifeBuoy, X, Play, Users, FileText, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import AnnouncementBanner from "@/components/announcement-banner"
+// import AnnouncementBanner from "@/components/announcement-banner"
 
 export default function LandingPage() {
   const container = {
@@ -31,42 +31,32 @@ export default function LandingPage() {
 
   const features = [
     {
-      title: "Mypen.ge შენს ყოველდღიურ ცხოვრებაში",
+      title: "ქართული, როგორც მშობლიური",
       description:
-        "ბიზნეს დოკუმენტები, კრეატიული წერა, ყოველდღიური მიმოწერა — ჩვენი AI ინსტრუმენტი დაგეხმარება შექმნა დახვეწილი და ზუსტი ტექსტები საუკეთესო შედეგებისთვის.",
-      icon: <Zap className="size-5" />,
+        "ტექსტები და პასუხები ბუნებრივ ქართულ ენაზე (არა \"გუგლ-თარგმანი\").",
+      icon: <Languages className="size-6" />,
     },
     {
-      title: "დოკუმენტებისა და სურათების დამუშავება",
+      title: "ყველაფერზე პასუხი",
       description:
-        "ატვირთეთ დოკუმენტები და სურათები, რათა მყისიერად გააანალიზოთ, შეაჯამოთ ან ამოიღოთ მთავარი ინფორმაცია.",
-      icon: <BarChart className="size-5" />,
+        "სამუშაოს ძიებიდან კოდირებამდე, რეცეპტებიდან იურიდიულ მონახაზებამდე.",
+      icon: <Brain className="size-6" />,
     },
     {
-      title: "ძიება ინტერნეტში რეალურ დროში",
-      description: "იყავით მუდამ საქმის კურსში ვებში რეალურ დროში ძიებით და მოთხოვნისამებრ გადამოწმებული ინფორმაციით.",
-      icon: <Globe className="size-5" />,
+      title: "ფაილების სუპერძალა",
+      description: "PDF/DOCX/სურათები → ამოღება, შეჯამება, რეფერენსები.",
+      icon: <FileText className="size-6" />,
     },
     {
-      title: "მულტი-მოდელის სიმძლავრე",
-      description: "აირჩიეთ 3 უახლეს AI მოდელს შორის, რომლებიც ოპტიმიზებულია კრეატიულობის, სიზუსტის და სისწრაფისთვის.",
-      icon: <Brain className="size-5" />,
-    },
-    {
-      title: "ქართულზე მორგებული AI",
-      description: "დაამყარეთ ბუნებრივი კომუნიკაცია AI-სთან, რომელსაც ესმის და თავისუფლად გპასუხობთ ქართულად.",
-      icon: <Languages className="size-5" />,
-    },
-    {
-      title: "24/7 მხარდაჭერა",
-      description: "მიიღეთ დახმარება ნებისმიერ დროს ჩვენი ერთგული მხარდაჭერის გუნდისგან.",
-      icon: <LifeBuoy className="size-5" />,
+      title: "პირდაპირ ვებში",
+      description: "რეალურ-დროის ძიება, წყაროების მითითება და სწრაფი გადამოწმება.",
+      icon: <Search className="size-6" />,
     },
   ]
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <AnnouncementBanner />
+      {/* <AnnouncementBanner /> */}
       <Header />
       <main className="flex-1 relative">
         <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-[#171717] bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
@@ -79,27 +69,52 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               className="text-center max-w-3xl mx-auto mb-12"
             >
-              <Badge className="mb-4 rounded-full px-4 py-1.5 text-sm font-medium" variant="secondary">
-                AI წერა სტრესის გარეშე
-              </Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                {"Mypen 2.0 - ᲓᲐᲖᲝᲒᲔ ᲓᲠᲝ. ᲬᲔᲠᲔ ᲣᲙᲔᲗᲔᲡᲐᲓ"}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight pb-2">
+                MyPen - შენი ქართული AI ასისტენტი
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                {
-                  "დაივიწყე წერის სირთულეები, ენობრივი ბარიერები და გრამატიკული შეცდომები. MyPen-ი შენი პირადი დამხმარეა, რომელიც ტექსტებთან მუშაობას სასიამოვნოს ხდის."
-                }
+
+              {/* Social Proof Chip */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <Badge className="rounded-full px-4 py-1.5 text-sm font-medium flex items-center gap-2" variant="secondary">
+                  <Users className="size-4" />
+                  10,000+ კმაყოფილი მომხმარებელი
+                </Badge>
+              </div>
+
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+                წერე ტექსტები, გააკეთე კვლევა,მოძებნე ვაკანსიები - ყველაფერი ქართულად და რეალურ დროში. საკრედიტო ბარათი არ არის საჭირო.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 <Button size="lg" className="rounded-full h-12 px-8 text-base" asChild>
                   <Link href="https://chat.mypen.ge">
                     დაიწყე უფასოდ
                     <ArrowRight className="ml-2 size-4" />
                   </Link>
                 </Button>
+                <Button size="lg" variant="ghost" className="rounded-full h-12 px-8 text-base" asChild>
+                  <a href="#how-it-works">
+                    <Play className="mr-2 size-4" />
+                    იხილე როგორ მუშაობს
+                  </a>
+                </Button>
               </div>
-              <div className="flex items-center justify-center gap-4 mt-6 text-sm text-muted-foreground">
-                🇬🇪 პირველად – სრული ქართული ენის მხარდაჭერით!
+
+              {/* Trust chips */}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
+                  ქართული 100%
+                </Badge>
+                <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
+                  ფაილების ანალიზი
+                </Badge>
+                <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
+                  ვებ-ძიება
+                </Badge>
+                <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
+                  სწრაფი პასუხები
+                </Badge>
               </div>
             </motion.div>
 
@@ -128,8 +143,8 @@ export default function LandingPage() {
 
         {/* Logos Section */}
 
-        {/* Features Section */}
-        <section id="features" className="w-full py-20 md:py-0">
+        {/* Features Section - რატომ MyPen */}
+        <section id="features" className="w-full py-20 md:py-24">
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -138,16 +153,9 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center space-y-4 text-center mb-12"
             >
-              <Badge className="rounded-full px-4 py-1.5 text-sm font-medium" variant="secondary">
-                მახასიათებლები
-              </Badge>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                ყველაფერი, რაც თქვენს პროდუქტიულობას ახალ საფეხურზე აიყვანს
+                რატომ MyPen
               </h2>
-              <p className="max-w-[800px] text-muted-foreground md:text-lg">
-                ჩვენი AI პლატფორმა გაძლევთ ყველა ინსტრუმენტს, რათა ქართულად დაამყაროთ კომუნიკაცია, გამოიკვლიოთ და
-                შექმნათ ისე, როგორც არასდროს.
-              </p>
             </motion.div>
 
             <motion.div
@@ -155,27 +163,43 @@ export default function LandingPage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true }}
-              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 py-[50px] pb-24"
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto mb-12"
             >
               {features.map((feature, i) => (
                 <motion.div key={i} variants={item}>
-                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-background to-muted/10 backdrop-blur transition-all hover:shadow-md">
+                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-background to-muted/10 backdrop-blur transition-all hover:shadow-md hover:border-primary/50">
                     <CardContent className="p-6 flex flex-col h-full">
-                      <div className="size-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-4">
+                      <div className="size-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-4">
                         {feature.icon}
                       </div>
-                      <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                      <p className="text-muted-foreground">{feature.description}</p>
+                      <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
               ))}
             </motion.div>
+
+            {/* Micro-CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex justify-center"
+            >
+              <Button variant="outline" className="rounded-full" asChild>
+                <Link href="https://chat.mypen.ge">
+                  სცადე ახლა
+                  <ArrowRight className="ml-2 size-4" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
         </section>
 
         {/* How It Works Section */}
-        <section className="w-full py-20 md:py-32 bg-muted/30 relative overflow-hidden">
+        <section id="how-it-works" className="w-full py-20 md:py-32 bg-muted/30 relative overflow-hidden">
           <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_40%,transparent_100%)]"></div>
 
           <div className="container px-4 md:px-6 relative">

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MessageCircleQuestion } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import AnnouncementBanner from "@/components/announcement-banner";
+// import AnnouncementBanner from "@/components/announcement-banner";
 import FAQSearch from "./faq-search";
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default async function FAQPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBanner />
+      {/* <AnnouncementBanner /> */}
       <Header />
       <main className="container mx-auto px-4 py-16">
         <div className="mx-auto max-w-4xl">

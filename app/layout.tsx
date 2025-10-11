@@ -3,7 +3,7 @@ import "@/styles/globals.css"
 import { Inter } from "next/font/google"
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
-import AnnouncementBanner from "@/components/announcement-banner"
+// import AnnouncementBanner from "@/components/announcement-banner"
 import { BeforeInteractiveScripts, AfterInteractiveScripts, LazyScripts } from "@/components/ScriptInjector"
 
 const inter = Inter({ subsets: ["latin"] })
