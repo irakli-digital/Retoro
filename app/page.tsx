@@ -529,69 +529,90 @@ export default function LandingPage() {
                   <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
                     {[
                       {
-                        name: "MyPen Light",
+                        name: "Mypen LIGHT",
                         price: "უფასო",
                         description: "ყველა საბაზისო ინსტრუმენტი AI-სთან მუშაობის დასაწყებად.",
                         features: [
-                          "Light მოდელი",
-                          "ქართული წერა/თარგმნა",
-                          "მცირე ფაილების ანალიზი",
-                          "დღეში 20,000 ტოკენი",
+                          "წვდომა Mypen Light მოდელზე",
+                          "მოხმარების დღიური ლიმიტი",
+                          "სტანდარტული სიჩქარე",
+                          "იდეალურია ყოველდღიური ამოცანებისთვის",
+                          "AI წერა და თარგმნა ქართულად",
                         ],
                         cta: "დაიწყე უფასოდ",
                         ctaId: "cta_pricing_starter",
+                        colorScheme: "default",
                       },
                       {
-                        name: "MyPen Pro",
-                        price: "₾24",
-                        description: "მაღალი ხარისხის კონტენტის სწრაფად შესაქმნელად.",
+                        name: "Mypen ULTRA",
+                        price: "₾69",
+                        description: "შეუზღუდავი შემოქმედებისა და რთული ამოცანებისთვის.",
                         features: [
-                          "Pro + Light მოდელები",
-                          "ვებ-ძიება რეალურ დროში",
-                          "დიდი ფაილების ანალიზი",
-                          "თვეში 250,000 ტოკენი",
-                        ],
-                        cta: "აირჩიე Pro",
-                        ctaId: "cta_pricing_pro",
-                        popular: true,
-                      },
-                      {
-                        name: "MyPen Ultra",
-                        price: "₾52",
-                        description: "რთული ამოცანებისა და მაქსიმალური სიჩქარისთვის.",
-                        features: [
-                          "Ultra მოდელი",
-                          "ყველაზე სწრაფი პასუხები",
-                          "შეუზღუდავი ტოკენები",
-                          "ღრმა კვლევა და დიდი მოცულობები",
+                          "ყველაფერი რაც Mypen Pro-შია",
+                          "Mypen Ultra მოდელზე წვდომა",
+                          "∞ შეუზღუდავი წვდომა",
+                          "20x მეტი კონტექსტის დამუშავება",
+                          "სიღრმისეული ანალიზი და კოდის წერა",
+                          "სრული წვდომა ყველა ინსტრუმენტზე (ძიება, ფაილები, თარგმანი)",
                         ],
                         cta: "აირჩიე Ultra",
                         ctaId: "cta_pricing_ultra",
+                        popular: true,
+                        colorScheme: "purple",
                       },
-                    ].map((plan, i) => (
+                      {
+                        name: "Mypen PRO",
+                        price: "₾29",
+                        description: "მაღალი ხარისხის კონტენტის სწრაფად შესაქმნელად.",
+                        features: [
+                          "ყველაფერი რაც Mypen Light-შია",
+                          "Mypen Pro მოდელზე წვდომა",
+                          "10x მეტი წვდომის ლიმიტი",
+                          "5x მეტი კონტექსტის დამუშავება",
+                          "მაღალი სიჩქარე",
+                          "კრეატიული კონტენტის შექმნა",
+                          "ფაილების ანალიზი (PDF, DOC, იმიჯები)",
+                          "ინტერნეტში ძიება",
+                        ],
+                        cta: "აირჩიე Pro",
+                        ctaId: "cta_pricing_pro",
+                        colorScheme: "blue",
+                      },
+                    ].map((plan, i) => {
+                      const isBlue = plan.colorScheme === "blue"
+                      const isPurple = plan.colorScheme === "purple"
+                      const borderColor = isPurple ? "border-purple-500/50" : isBlue ? "border-blue-500/50" : "border-border/40"
+                      const titleColor = isPurple ? "text-purple-400" : isBlue ? "text-blue-400" : ""
+                      const buttonClass = isPurple
+                        ? "bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white border-0"
+                        : isBlue
+                        ? "border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                        : ""
+
+                      return (
                       <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
-                        <Card className={`relative overflow-hidden h-full ${plan.popular ? "border-primary shadow-lg" : "border-border/40 shadow-md"} bg-gradient-to-b from-background to-muted/10 backdrop-blur`}>
+                        <Card className={`relative overflow-hidden h-full ${borderColor} ${plan.popular ? "shadow-xl shadow-purple-500/20" : "shadow-md"} bg-gradient-to-b from-background to-muted/10 backdrop-blur`}>
                           {plan.popular && (
-                            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-bl-lg">
+                            <div className="absolute top-0 right-0 bg-purple-600 text-white px-3 py-1 text-xs font-medium rounded-bl-lg">
                               ყველაზე პოპულარული
                             </div>
                           )}
                           <CardContent className="p-6 flex flex-col h-full">
-                            <h3 className="text-2xl font-bold">{plan.name}</h3>
+                            <h3 className={`text-2xl font-bold ${titleColor}`}>{plan.name}</h3>
                             <div className="flex items-baseline mt-4">
-                              <span className="text-4xl font-bold">{plan.price}</span>
+                              <span className={`text-4xl font-bold ${titleColor}`}>{plan.price}</span>
                               {plan.price !== "უფასო" && <span className="text-muted-foreground ml-1">/თვე</span>}
                             </div>
                             <p className="text-muted-foreground mt-2 max-w-[40ჩ]">{plan.description}</p>
                             <ul className="space-y-3 my-6 flex-grow">
                               {plan.features.map((feature, j) => (
                                 <li key={j} className="flex items-center">
-                                  <Check className="text-primary size-4 mr-2 flex-shrink-0" />
+                                  <Check className={`size-4 mr-2 flex-shrink-0 ${isPurple ? "text-purple-500" : isBlue ? "text-blue-500" : "text-primary"}`} />
                                   <span className="text-sm">{feature}</span>
                                 </li>
                               ))}
                             </ul>
-                            <Button className="w-full mt-auto rounded-full transition-all hover:scale-105" variant={plan.popular ? "default" : "outline"} asChild>
+                            <Button className={`w-full mt-auto rounded-full transition-all hover:scale-105 ${buttonClass}`} variant={plan.popular ? "default" : "outline"} asChild>
                               <Link href="https://chat.mypen.ge" aria-label={plan.cta} data-cta-id={plan.ctaId}>
                                 {plan.cta}
                               </Link>
@@ -599,7 +620,8 @@ export default function LandingPage() {
                           </CardContent>
                         </Card>
                       </motion.div>
-                    ))}
+                    )}
+                    )}
                   </div>
 
                   {/* Cancellation and payment security note */}
@@ -610,7 +632,7 @@ export default function LandingPage() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="text-center mt-8 text-sm text-muted-foreground"
                   >
-                    ნებისმიერ დროს გაუქმდება. ანგარიშსწორება დაცულია.
+                                        გაუქმება და თანხის დაბრუნება 7 დღის განმავლობაში.
                   </motion.div>
                 </TabsContent>
 
