@@ -102,7 +102,7 @@ export default function LandingPage() {
               className="text-center max-w-3xl mx-auto mb-8 md:mb-12"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 leading-tight">
-                შენი ქართული AI ასისტენტი
+                შენი ქართული წერის AI ასისტენტი
               </h1>
 
               {/* Social Proof Chip */}
@@ -114,13 +114,13 @@ export default function LandingPage() {
               </div>
 
               <p className="text-base md:text-lg text-muted-foreground mb-5 max-w-[70ch] mx-auto leading-relaxed">
-                იპოვე სამუშაო, მიიღე პასუხები ნებისმიერ თემაზე, გაანალიზე ფაილები და წერე ქართულად — ერთ სივრცეში.
+                მიიღე პასუხები ნებისმიერ თემაზე, წერე გამართული ქართულით, ატვირთე და გააანალიზე ფაილები — ერთ სივრცეში.
               </p>
 
               {/* Trust chips */}
               <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
                 <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
-                  ქართული 100%
+                  ქართული ენა - 100%
                 </Badge>
                 <Badge className="rounded-full px-3 py-1 text-xs font-medium" variant="outline">
                   ვებ-ძიება
