@@ -52,3 +52,54 @@ CREATE INDEX IF NOT EXISTS idx_faqs_category ON faqs(category, sort_order ASC);
 -- ('What is Mypen?', 'რა არის Mypen?', 
 --  'Mypen is an AI-powered writing assistant...', 'Mypen არის AI-ზე დაფუძნებული წერის ასისტენტი...',
 --  'General', 'ზოგადი', 1);
+
+-- Return Tracker Tables
+
+-- Retailer policies table
+CREATE TABLE IF NOT EXISTS retailer_policies (
+  id VARCHAR(100) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  return_window_days INTEGER NOT NULL,
+  policy_description TEXT,
+  website_url VARCHAR(500),
+  has_free_returns BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for retailer policies
+CREATE INDEX IF NOT EXISTS idx_retailer_policies_name ON retailer_policies(name);
+
+-- Return items table
+CREATE TABLE IF NOT EXISTS return_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  retailer_id VARCHAR(100) NOT NULL REFERENCES retailer_policies(id),
+  name VARCHAR(255),
+  price DECIMAL(10, 2),
+  purchase_date TIMESTAMP NOT NULL,
+  return_deadline TIMESTAMP NOT NULL,
+  is_returned BOOLEAN DEFAULT false,
+  returned_date TIMESTAMP,
+  user_id VARCHAR(255) NOT NULL, -- Will be UUID or string ID from auth system
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for return items
+CREATE INDEX IF NOT EXISTS idx_return_items_user_id ON return_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_return_items_return_deadline ON return_items(return_deadline);
+CREATE INDEX IF NOT EXISTS idx_return_items_is_returned ON return_items(is_returned);
+CREATE INDEX IF NOT EXISTS idx_return_items_user_deadline ON return_items(user_id, return_deadline);
+
+-- Sample retailer policies (initial seed data)
+INSERT INTO retailer_policies (id, name, return_window_days, policy_description, website_url, has_free_returns) VALUES
+('zara', 'Zara', 30, '30 days from delivery date', 'https://www.zara.com/us/en/help/returns', false),
+('nordstrom', 'Nordstrom', 0, 'No deadline - free returns', 'https://www.nordstrom.com/browse/customer-service/return-policy', true),
+('asos', 'ASOS', 28, '28 days from delivery', 'https://www.asos.com/customer-care/returns/', true),
+('macys', 'Macy''s', 90, '90 days from purchase', 'https://www.macys.com/service/returns/index', false),
+('target', 'Target', 90, '90 days for most items', 'https://www.target.com/help/returns-exchanges', false),
+('amazon', 'Amazon', 30, '30 days from delivery', 'https://www.amazon.com/gp/help/customer/display.html', true),
+('h-m', 'H&M', 30, '30 days from purchase', 'https://www2.hm.com/en_us/customer-service/returns.html', false),
+('gap', 'Gap', 30, '30 days from purchase', 'https://www.gap.com/customer-service/returns', true),
+('old-navy', 'Old Navy', 30, '30 days from purchase', 'https://oldnavy.gap.com/customer-service/returns', true),
+('banana-republic', 'Banana Republic', 30, '30 days from purchase', 'https://bananarepublic.gap.com/customer-service/returns', true)
+ON CONFLICT (id) DO NOTHING;

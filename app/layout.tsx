@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
 // import AnnouncementBanner from "@/components/announcement-banner"
 import { BeforeInteractiveScripts, AfterInteractiveScripts, LazyScripts } from "@/components/ScriptInjector"
+import AppTabBar from "@/components/app-tab-bar"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -56,7 +57,11 @@ export default function RootLayout({
         <AfterInteractiveScripts />
         
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          {children}
+          <div className="flex min-h-screen flex-col">
+            {children}
+            {/* iOS-style tab bar - only shows on mobile and app pages */}
+            <AppTabBar />
+          </div>
         </ThemeProvider>
         
         {/* Scripts that load lazily when page is idle */}

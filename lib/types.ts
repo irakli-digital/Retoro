@@ -32,3 +32,32 @@ export interface FAQ {
   created_at: string | Date;
   updated_at: string | Date;
 }
+
+// Return Tracker Types
+export interface RetailerPolicy {
+  id: string;
+  name: string;
+  return_window_days: number;
+  policy_description: string | null;
+  website_url: string | null;
+  has_free_returns: boolean;
+  created_at: string | Date;
+}
+
+export interface ReturnItem {
+  id: string;
+  retailer_id: string;
+  name: string | null;
+  price: number | null;
+  purchase_date: string | Date;
+  return_deadline: string | Date;
+  is_returned: boolean;
+  returned_date: string | Date | null;
+  user_id: string;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+export type ReturnItemWithRetailer = ReturnItem & {
+  retailer?: RetailerPolicy;
+};
