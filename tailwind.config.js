@@ -51,6 +51,10 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        shopify: {
+          purple: "hsl(var(--shopify-purple))",
+          teal: "hsl(var(--shopify-teal))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -245,6 +245,7 @@ export default function AddPurchasePage() {
           {/* Submit Button */}
           <Button
             type="submit"
+            variant="shopify"
             className="w-full ios-rounded"
             disabled={submitting || !formData.retailerId}
             size="lg"

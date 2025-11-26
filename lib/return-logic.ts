@@ -44,15 +44,28 @@ export function getDaysRemaining(deadline: Date): number {
  */
 export function getUrgencyColor(daysRemaining: number): string {
   if (daysRemaining < 0) {
-    return 'text-red-500'; // Past deadline
+    return 'text-red-500'; // Past deadline - red
   }
   if (daysRemaining <= 2) {
-    return 'text-red-500'; // Urgent - less than 2 days
+    return 'text-red-500'; // Urgent - less than 2 days - red
   }
   if (daysRemaining <= 7) {
-    return 'text-orange-500'; // Warning - less than 7 days
+    return 'text-foreground'; // Warning - less than 7 days - use foreground (black/white)
   }
-  return 'text-green-500'; // Safe - more than 7 days
+  return 'text-primary'; // Safe - more than 7 days - use primary (Shopify green)
+}
+
+export function getUrgencyBadgeVariant(daysRemaining: number): "default" | "secondary" | "destructive" {
+  if (daysRemaining < 0) {
+    return 'destructive'; // Past deadline - red
+  }
+  if (daysRemaining <= 2) {
+    return 'destructive'; // Urgent - red
+  }
+  if (daysRemaining <= 7) {
+    return 'default'; // Warning - default (dark/neutral)
+  }
+  return 'default'; // Safe - default with primary text color
 }
 
 /**

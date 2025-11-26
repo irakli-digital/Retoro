@@ -1,15 +1,16 @@
 import { Metadata } from "next";
 import { getActiveReturnItemsByUserId, getAllRetailerPolicies } from "@/lib/queries";
-import { getDaysRemaining, formatDaysRemaining, getUrgencyColor } from "@/lib/return-logic";
+import { getDaysRemaining, formatDaysRemaining, getUrgencyColor, getUrgencyBadgeVariant } from "@/lib/return-logic";
 import { getUserId } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, ExternalLink } from "lucide-react";
+import { Plus, Package, ExternalLink, Calendar, DollarSign, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import RegistrationBanner from "@/components/registration-banner";
 
 export const metadata: Metadata = {
   title: "Return Tracker - Never Miss a Return Deadline",
@@ -50,34 +51,44 @@ export default async function DashboardPage() {
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
+          {/* Registration Banner */}
+          {returnItems.length > 0 && (
+            <div className="mb-6">
+              <RegistrationBanner
+                itemCount={returnItems.length}
+                totalValue={returnItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0)}
+                variant={returnItems.length === 1 ? "soft" : returnItems.length === 2 ? "medium" : "strong"}
+              />
+            </div>
+          )}
 
           {/* Stats Summary */}
           {returnItems.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-2.5 mb-5">
               <Card className="ios-rounded">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Active</CardDescription>
-                  <CardTitle className="text-xl">{returnItems.length}</CardTitle>
-                </CardHeader>
+                <CardContent className="p-3 text-center">
+                  <div className="text-2xl font-bold mb-0.5">{returnItems.length}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</div>
+                </CardContent>
               </Card>
               <Card className="ios-rounded">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Due Soon</CardDescription>
-                  <CardTitle className="text-xl">
+                <CardContent className="p-3 text-center">
+                  <div className="text-2xl font-bold mb-0.5">
                     {returnItems.filter(item => {
                       const days = getDaysRemaining(new Date(item.return_deadline));
                       return days >= 0 && days <= 7;
                     }).length}
-                  </CardTitle>
-                </CardHeader>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Due Soon</div>
+                </CardContent>
               </Card>
               <Card className="ios-rounded">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Total Value</CardDescription>
-                  <CardTitle className="text-xl">
+                <CardContent className="p-3 text-center">
+                  <div className="text-2xl font-bold mb-0.5">
                     ${returnItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0).toFixed(0)}
-                  </CardTitle>
-                </CardHeader>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Value</div>
+                </CardContent>
               </Card>
             </div>
           )}
@@ -91,7 +102,7 @@ export default async function DashboardPage() {
                 <p className="text-muted-foreground mb-6 text-sm">
                   Start tracking your purchases by adding your first item
                 </p>
-                <Button asChild className="ios-rounded">
+                <Button asChild variant="shopify" className="ios-rounded">
                   <Link href="/add">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Your First Purchase
@@ -100,83 +111,67 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {returnItems.map((item) => {
                 const daysRemaining = getDaysRemaining(new Date(item.return_deadline));
                 const urgencyColor = getUrgencyColor(daysRemaining);
+                const badgeVariant = getUrgencyBadgeVariant(daysRemaining);
                 const retailer = item.retailer;
 
                 return (
-                  <Card key={item.id} className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-base mb-1">
-                            {item.name || "Unnamed Item"}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-2 text-xs">
-                            {retailer && (
-                              <>
-                                <span>{retailer.name}</span>
-                                {retailer.has_free_returns && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                    Free Returns
-                                  </Badge>
-                                )}
-                              </>
+                  <Link key={item.id} href={`/items/${item.id}`}>
+                    <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight cursor-pointer group">
+                      <CardContent className="p-4">
+                        {/* Header: Product name and days remaining */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0 pr-3">
+                            <h3 className="text-base font-semibold mb-1 truncate">
+                              {item.name || "Unnamed Item"}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {retailer && (
+                                <>
+                                  <span>{retailer.name}</span>
+                                  {retailer.has_free_returns && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                      Free Returns
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={badgeVariant}
+                            className={cn("text-xs font-medium shrink-0", urgencyColor)}
+                          >
+                            {formatDaysRemaining(daysRemaining)}
+                          </Badge>
+                        </div>
+
+                        {/* Info row: Date and Price */}
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-4 text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span className="text-xs">
+                                {format(new Date(item.return_deadline), "MMM d")}
+                              </span>
+                            </div>
+                            {item.price && (
+                              <div className="flex items-center gap-1.5">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                <span className="text-xs font-medium text-foreground">
+                                  ${Number(item.price).toFixed(2)}
+                                </span>
+                              </div>
                             )}
-                          </CardDescription>
-                        </div>
-                        <Badge 
-                          variant={daysRemaining < 0 ? "destructive" : daysRemaining <= 2 ? "destructive" : daysRemaining <= 7 ? "secondary" : "default"}
-                          className={cn("text-xs", urgencyColor)}
-                        >
-                          {formatDaysRemaining(daysRemaining)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1">Purchase Date</div>
-                          <div className="font-medium text-xs">
-                            {format(new Date(item.purchase_date), "MMM d, yyyy")}
                           </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                         </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1">Return Deadline</div>
-                          <div className="font-medium text-xs">
-                            {format(new Date(item.return_deadline), "MMM d, yyyy")}
-                          </div>
-                        </div>
-                      </div>
-                        {item.price && (
-                          <div className="text-sm mb-4">
-                            <div className="text-xs text-muted-foreground mb-1">Price</div>
-                            <div className="font-semibold">${Number(item.price).toFixed(2)}</div>
-                          </div>
-                        )}
-                      <div className="flex gap-2">
-                        {retailer?.website_url && (
-                          <Button variant="outline" size="sm" className="ios-rounded flex-1" asChild>
-                            <a 
-                              href={retailer.website_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                            >
-                              Return Portal
-                              <ExternalLink className="ml-2 h-3 w-3" />
-                            </a>
-                          </Button>
-                        )}
-                        <Button variant="outline" size="sm" className="ios-rounded flex-1" asChild>
-                          <Link href={`/items/${item.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 );
               })}
             </div>

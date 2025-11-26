@@ -61,3 +61,24 @@ export interface ReturnItem {
 export type ReturnItemWithRetailer = ReturnItem & {
   retailer?: RetailerPolicy;
 };
+
+export interface User {
+  id: string;
+  email: string;
+  password_hash: string | null;
+  name: string | null;
+  email_verified: boolean;
+  email_verified_at: string | Date | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+  last_login_at: string | Date | null;
+}
+
+export interface MagicLinkToken {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string | Date;
+  used: boolean;
+  created_at: string | Date;
+}

@@ -19,6 +19,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground rounded-lg",
         link: "text-primary underline-offset-4 hover:underline",
         ios: "bg-primary text-primary-foreground hover:bg-primary/90 ios-rounded-lg shadow-sm font-semibold",
+        shopify: "bg-shopify-purple text-white hover:bg-shopify-purple/90 ios-rounded shadow-sm font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2 ios-rounded",

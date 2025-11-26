@@ -58,7 +58,7 @@ export default function RootLayout({
         {/* Scripts that load after page becomes interactive */}
         <AfterInteractiveScripts />
         
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <SessionProvider>
             <div className="flex min-h-screen flex-col">
               {children}

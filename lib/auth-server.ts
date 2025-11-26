@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getUserById } from "@/lib/queries";
 
 const USER_ID_COOKIE = "retoro_user_id";
 
@@ -12,7 +13,11 @@ export async function getUserId(): Promise<string> {
     const userId = cookieStore.get(USER_ID_COOKIE)?.value;
     
     if (userId) {
-      return userId;
+      // Verify user exists and is valid
+      const user = await getUserById(userId);
+      if (user) {
+        return userId;
+      }
     }
     
     // Return a temporary ID - cookie will be set client-side
@@ -21,6 +26,25 @@ export async function getUserId(): Promise<string> {
   } catch (error) {
     console.error("Error reading cookies:", error);
     return "demo-user-123";
+  }
+}
+
+/**
+ * Get the current user object (Server-side only)
+ */
+export async function getCurrentUser() {
+  try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get(USER_ID_COOKIE)?.value;
+    
+    if (userId) {
+      return await getUserById(userId);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
   }
 }
 

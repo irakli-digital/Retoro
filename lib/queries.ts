@@ -1,5 +1,5 @@
 import { sql } from './db';
-import type { BlogPost, BlogPostPreview, FAQ, ReturnItem, RetailerPolicy, ReturnItemWithRetailer } from './types';
+import type { BlogPost, BlogPostPreview, FAQ, ReturnItem, RetailerPolicy, ReturnItemWithRetailer, User, MagicLinkToken } from './types';
 import { unstable_cache } from 'next/cache';
 
 export const getPublishedPosts = unstable_cache(
@@ -247,5 +247,91 @@ export async function deleteReturnItem(itemId: string, userId: string): Promise<
   await sql`
     DELETE FROM return_items
     WHERE id = ${itemId} AND user_id = ${userId}
+  `;
+}
+
+// User queries
+export async function createUser(
+  email: string,
+  name: string | null,
+  passwordHash: string | null,
+  emailVerified: boolean = false
+): Promise<string> {
+  const result = await sql`
+    INSERT INTO users (email, name, password_hash, email_verified)
+    VALUES (${email}, ${name || null}, ${passwordHash || null}, ${emailVerified})
+    RETURNING id
+  `;
+  
+  return result[0].id as string;
+}
+
+export async function updateUserEmailVerified(userId: string): Promise<void> {
+  await sql`
+    UPDATE users
+    SET email_verified = true, email_verified_at = NOW(), updated_at = NOW()
+    WHERE id = ${userId}
+  `;
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const result = await sql`
+    SELECT * FROM users
+    WHERE email = ${email}
+    LIMIT 1
+  `;
+  
+  return (result[0] as User) || null;
+}
+
+export async function getUserById(userId: string): Promise<User | null> {
+  const result = await sql`
+    SELECT * FROM users
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  
+  return (result[0] as User) || null;
+}
+
+// Migrate anonymous session data to registered user
+export async function migrateAnonymousData(anonymousUserId: string, newUserId: string): Promise<number> {
+  const result = await sql`
+    UPDATE return_items
+    SET user_id = ${newUserId}
+    WHERE user_id = ${anonymousUserId}
+    RETURNING id
+  `;
+  
+  return result.length;
+}
+
+// Magic link token queries
+export async function createMagicLinkToken(
+  userId: string,
+  token: string,
+  expiresAt: Date
+): Promise<void> {
+  await sql`
+    INSERT INTO magic_link_tokens (user_id, token, expires_at)
+    VALUES (${userId}, ${token}, ${expiresAt.toISOString()})
+  `;
+}
+
+export async function getMagicLinkToken(token: string): Promise<MagicLinkToken | null> {
+  const result = await sql`
+    SELECT * FROM magic_link_tokens
+    WHERE token = ${token} AND used = false AND expires_at > NOW()
+    LIMIT 1
+  `;
+  
+  return (result[0] as MagicLinkToken) || null;
+}
+
+export async function markMagicLinkTokenAsUsed(token: string): Promise<void> {
+  await sql`
+    UPDATE magic_link_tokens
+    SET used = true
+    WHERE token = ${token}
   `;
 }

@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255), -- NULL for passwordless/magic link
   name VARCHAR(255),
+  email_verified BOOLEAN DEFAULT false,
+  email_verified_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   last_login_at TIMESTAMP
@@ -68,6 +70,22 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Indexes for users
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified);
+
+-- Magic link tokens table
+CREATE TABLE IF NOT EXISTS magic_link_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for magic link tokens
+CREATE INDEX IF NOT EXISTS idx_magic_tokens_token ON magic_link_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_magic_tokens_user_id ON magic_link_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_magic_tokens_expires ON magic_link_tokens(expires_at);
 
 -- Return Tracker Tables
 
@@ -95,7 +113,7 @@ CREATE TABLE IF NOT EXISTS return_items (
   return_deadline TIMESTAMP NOT NULL,
   is_returned BOOLEAN DEFAULT false,
   returned_date TIMESTAMP,
-  user_id VARCHAR(255) NOT NULL, -- Will be UUID or string ID from auth system
+  user_id VARCHAR(255) NOT NULL, -- UUID from users table or anonymous session ID
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

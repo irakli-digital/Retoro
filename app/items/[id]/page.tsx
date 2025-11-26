@@ -189,7 +189,7 @@ export default async function ReturnItemDetailsPage({
           {/* Return Portal Link */}
           {retailer?.website_url && (
             <Button 
-              variant="default" 
+              variant="shopify" 
               className="w-full ios-rounded" 
               size="lg"
               asChild
