@@ -14,7 +14,9 @@ export default function GoogleAuthButton() {
       return;
     }
     
-    const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+    // Use NEXT_PUBLIC_SITE_URL if available (production), otherwise use window.location.origin (dev)
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const redirectUri = `${baseUrl}/api/auth/google/callback`;
     const scope = "openid email profile";
     const state = encodeURIComponent(JSON.stringify({ anonymous_user_id: anonymousUserId }));
     
