@@ -4,6 +4,7 @@ import { calculateDeadline } from "@/lib/return-logic";
 import { getRetailerPolicy } from "@/lib/queries";
 import { getUserId } from "@/lib/auth-server";
 import { cookies } from "next/headers";
+import { convertCurrency, isValidCurrency } from "@/lib/currency";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,14 @@ const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { retailer_id, name, price, purchase_date, user_id: provided_user_id } = body;
+    const { 
+      retailer_id, 
+      name, 
+      price, 
+      purchase_date, 
+      user_id: provided_user_id,
+      currency: original_currency = 'USD' // Default to USD if not provided
+    } = body;
 
     if (!retailer_id || !purchase_date) {
       return NextResponse.json(
@@ -86,11 +94,33 @@ export async function POST(request: NextRequest) {
     const purchaseDate = new Date(purchase_date);
     const returnDeadline = calculateDeadline(purchaseDate, policy);
 
+    // Validate and normalize currency
+    const currency = isValidCurrency(original_currency) ? original_currency.toUpperCase() : 'USD';
+    
+    // Convert price to USD if needed
+    let price_usd: number | null = null;
+    if (price !== null && price !== undefined) {
+      if (currency === 'USD') {
+        price_usd = price;
+      } else {
+        try {
+          price_usd = await convertCurrency(price, currency, 'USD');
+          console.log(`[Return Items] Converted ${price} ${currency} to ${price_usd} USD`);
+        } catch (error) {
+          console.error(`[Return Items] Currency conversion failed:`, error);
+          // If conversion fails, store original price as USD (fallback)
+          price_usd = price;
+        }
+      }
+    }
+
     // Add return item
     const item = await addReturnItem({
       retailer_id,
       name: name || null,
       price: price || null,
+      original_currency: currency,
+      price_usd: price_usd,
       purchase_date: purchaseDate,
       return_deadline: returnDeadline,
       is_returned: false,

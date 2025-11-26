@@ -288,13 +288,15 @@ export async function getActiveReturnItemsByUserId(userId: string): Promise<Retu
 export async function addReturnItem(item: Omit<ReturnItem, 'id' | 'created_at' | 'updated_at'>): Promise<ReturnItem> {
   const result = await sql`
     INSERT INTO return_items (
-      retailer_id, name, price, purchase_date, return_deadline, 
-      is_returned, user_id
+      retailer_id, name, price, original_currency, price_usd, 
+      purchase_date, return_deadline, is_returned, user_id
     )
     VALUES (
       ${item.retailer_id},
       ${item.name || null},
       ${item.price || null},
+      ${item.original_currency || 'USD'},
+      ${item.price_usd || null},
       ${item.purchase_date},
       ${item.return_deadline},
       ${item.is_returned || false},
@@ -370,6 +372,14 @@ export async function getUserById(userId: string): Promise<User | null> {
   `;
   
   return (result[0] as User) || null;
+}
+
+export async function updateUserPreferredCurrency(userId: string, currency: string): Promise<void> {
+  await sql`
+    UPDATE users
+    SET preferred_currency = ${currency}, updated_at = NOW()
+    WHERE id = ${userId}
+  `;
 }
 
 // Migrate anonymous session data to registered user

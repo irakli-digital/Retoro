@@ -19,18 +19,57 @@ import {
   Moon,
   Sun,
   Loader2,
+  DollarSign,
 } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import axios from "axios"
 import { toast } from "sonner"
+import { useEffect } from "react"
+import { COMMON_CURRENCIES, getCurrencySymbol } from "@/lib/currency"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
   const [emailReminders, setEmailReminders] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [preferredCurrency, setPreferredCurrency] = useState("USD")
+  const [loadingCurrency, setLoadingCurrency] = useState(true)
   const router = useRouter()
+
+  // Load user's preferred currency
+  useEffect(() => {
+    const loadCurrency = async () => {
+      try {
+        const response = await axios.get("/api/settings/currency")
+        setPreferredCurrency(response.data.currency || "USD")
+      } catch (error) {
+        console.error("Error loading currency:", error)
+      } finally {
+        setLoadingCurrency(false)
+      }
+    }
+    loadCurrency()
+  }, [])
+
+  const handleCurrencyChange = async (currency: string) => {
+    try {
+      await axios.put("/api/settings/currency", { currency })
+      setPreferredCurrency(currency)
+      toast.success(`Currency preference updated to ${currency}`)
+      router.refresh() // Refresh to update dashboard
+    } catch (error: any) {
+      console.error("Error updating currency:", error)
+      toast.error(error.response?.data?.error || "Failed to update currency")
+    }
+  }
 
   const handleSignOut = async () => {
     setLoggingOut(true)
@@ -105,6 +144,44 @@ export default function SettingsPage() {
                     checked={emailReminders}
                     onCheckedChange={setEmailReminders}
                   />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Currency Section */}
+          <div>
+            <h2 className="ios-section-header mb-2">Currency</h2>
+            <Card className="ios-rounded">
+              <CardContent className="p-0">
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <Label htmlFor="currency" className="font-normal">
+                      Preferred Currency
+                    </Label>
+                  </div>
+                  {loadingCurrency ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Select value={preferredCurrency} onValueChange={handleCurrencyChange}>
+                      <SelectTrigger className="w-[140px] ios-rounded">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COMMON_CURRENCIES.map((curr) => (
+                          <SelectItem key={curr.code} value={curr.code}>
+                            {curr.symbol} {curr.code} - {curr.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="px-4 pb-4">
+                  <p className="text-xs text-muted-foreground">
+                    All prices will be displayed in your preferred currency. Original purchase currency is preserved.
+                  </p>
                 </div>
               </CardContent>
             </Card>

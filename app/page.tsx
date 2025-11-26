@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getActiveReturnItemsByUserId, getAllRetailerPolicies } from "@/lib/queries";
+import { getActiveReturnItemsByUserId, getAllRetailerPolicies, getUserById } from "@/lib/queries";
 import { getDaysRemaining, formatDaysRemaining, getUrgencyColor, getUrgencyBadgeVariant } from "@/lib/return-logic";
 import { getUserId, getCurrentUser } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import RegistrationBanner from "@/components/registration-banner";
 import OAuthHandler from "@/components/oauth-handler";
 import { Suspense } from "react";
+import { CurrencyDisplay } from "@/components/currency-display";
+import { CurrencyTotal } from "@/components/currency-total";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +28,10 @@ export default async function DashboardPage() {
   const userId = await getUserId();
   const currentUser = await getCurrentUser();
   const isAuthenticated = currentUser !== null;
+  
+  // Get user's preferred currency (default to USD)
+  const user = currentUser || (userId !== "demo-user-123" ? await getUserById(userId) : null);
+  const preferredCurrency = user?.preferred_currency || "USD";
   
   // Fetch return items and retailer policies
   let returnItems = [];
@@ -65,8 +71,9 @@ export default async function DashboardPage() {
             <div className="mb-6">
               <RegistrationBanner
                 itemCount={returnItems.length}
-                totalValue={returnItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0)}
+                totalValue={returnItems.reduce((sum, item) => sum + (Number(item.price_usd || item.price) || 0), 0)}
                 variant={returnItems.length === 1 ? "soft" : returnItems.length === 2 ? "medium" : "strong"}
+                preferredCurrency={preferredCurrency}
               />
             </div>
           )}
@@ -94,7 +101,14 @@ export default async function DashboardPage() {
               <Card className="ios-rounded">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold mb-0.5">
-                    ${returnItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0).toFixed(0)}
+                    <CurrencyTotal 
+                      items={returnItems.map(item => ({
+                        price: item.price,
+                        original_currency: item.original_currency,
+                        price_usd: item.price_usd,
+                      }))}
+                      preferredCurrency={preferredCurrency}
+                    />
                   </div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Value</div>
                 </CardContent>
@@ -170,9 +184,12 @@ export default async function DashboardPage() {
                             {item.price && (
                               <div className="flex items-center gap-1.5">
                                 <DollarSign className="h-3.5 w-3.5" />
-                                <span className="text-xs font-medium text-foreground">
-                                  ${Number(item.price).toFixed(2)}
-                                </span>
+                                <CurrencyDisplay
+                                  amount={item.price}
+                                  originalCurrency={item.original_currency || 'USD'}
+                                  preferredCurrency={preferredCurrency}
+                                  className="text-xs font-medium text-foreground"
+                                />
                               </div>
                             )}
                           </div>

@@ -5,17 +5,20 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import RegistrationModal from "./registration-modal"
+import { CurrencyTotal } from "./currency-total"
 
 interface RegistrationBannerProps {
   itemCount: number
   totalValue: number
   variant?: "soft" | "medium" | "strong"
+  preferredCurrency?: string
 }
 
 export default function RegistrationBanner({
   itemCount,
   totalValue,
   variant = "soft",
+  preferredCurrency = "USD",
 }: RegistrationBannerProps) {
   const [open, setOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
@@ -26,7 +29,17 @@ export default function RegistrationBanner({
     if (variant === "soft") {
       return "Save your returns and get reminders"
     } else if (variant === "medium") {
-      return `You're tracking ${itemCount} return${itemCount !== 1 ? 's' : ''} worth $${totalValue.toFixed(2)}. Save them permanently?`
+      return (
+        <span>
+          You're tracking {itemCount} return{itemCount !== 1 ? 's' : ''} worth{' '}
+          <CurrencyTotal
+            items={[{ price: totalValue, original_currency: 'USD', price_usd: totalValue }]}
+            preferredCurrency={preferredCurrency}
+            className="font-semibold"
+          />
+          . Save them permanently?
+        </span>
+      )
     } else {
       return `Save your ${itemCount} return${itemCount !== 1 ? 's' : ''} before you go?`
     }

@@ -48,7 +48,9 @@ export interface ReturnItem {
   id: string;
   retailer_id: string;
   name: string | null;
-  price: number | null;
+  price: number | null; // Price in original currency
+  original_currency: string; // ISO 4217 currency code (e.g., 'USD', 'EUR', 'GEL')
+  price_usd: number | null; // Price converted to USD
   purchase_date: string | Date;
   return_deadline: string | Date;
   is_returned: boolean;
@@ -69,6 +71,7 @@ export interface User {
   name: string | null;
   email_verified: boolean;
   email_verified_at: string | Date | null;
+  preferred_currency: string; // ISO 4217 currency code (e.g., 'USD', 'EUR', 'GEL')
   created_at: string | Date;
   updated_at: string | Date;
   last_login_at: string | Date | null;
