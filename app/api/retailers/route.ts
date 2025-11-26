@@ -12,11 +12,15 @@ export async function GET(request: NextRequest) {
     
     let retailers = await getAllRetailerPolicies();
     
+    // Debug logging
+    console.log(`[Retailers API] Search: "${search}", Name: "${name}", Total retailers: ${retailers.length}`);
+    
     // If name parameter provided, do exact match (for e-commerce checker)
     if (name) {
       const matched = retailers.find(
         (r) => r.name.toLowerCase() === name.toLowerCase()
       );
+      console.log(`[Retailers API] Name search for "${name}": ${matched ? 'Found' : 'Not found'}`);
       return NextResponse.json(matched ? [matched] : []);
     }
     
@@ -35,6 +39,10 @@ export async function GET(request: NextRequest) {
         return nameWords.some(word => searchWords.includes(word)) ||
                searchWords.some(word => nameWords.includes(word));
       });
+      console.log(`[Retailers API] Search for "${search}": Found ${matched.length} matches`);
+      if (matched.length > 0) {
+        console.log(`[Retailers API] Matched retailers:`, matched.map(r => r.name).join(', '));
+      }
       return NextResponse.json(matched);
     }
     
