@@ -82,3 +82,14 @@ export interface MagicLinkToken {
   used: boolean;
   created_at: string | Date;
 }
+
+export interface Session {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string | Date;
+  created_at: string | Date;
+  last_used_at: string | Date;
+  ip_address: string | null;
+  user_agent: string | null;
+}

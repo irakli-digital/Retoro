@@ -1,5 +1,5 @@
 import { sql } from './db';
-import type { BlogPost, BlogPostPreview, FAQ, ReturnItem, RetailerPolicy, ReturnItemWithRetailer, User, MagicLinkToken } from './types';
+import type { BlogPost, BlogPostPreview, FAQ, ReturnItem, RetailerPolicy, ReturnItemWithRetailer, User, MagicLinkToken, Session } from './types';
 import { unstable_cache } from 'next/cache';
 
 export const getPublishedPosts = unstable_cache(
@@ -370,4 +370,82 @@ export async function markMagicLinkTokenAsUsed(token: string): Promise<void> {
     SET used = true
     WHERE token = ${token}
   `;
+}
+
+// Session queries
+import type { Session } from './types';
+
+/**
+ * Create a new session
+ */
+export async function createSession(
+  userId: string,
+  token: string,
+  expiresAt: Date,
+  ipAddress?: string | null,
+  userAgent?: string | null
+): Promise<Session> {
+  const result = await sql`
+    INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent)
+    VALUES (${userId}, ${token}, ${expiresAt.toISOString()}, ${ipAddress || null}, ${userAgent || null})
+    RETURNING *
+  `;
+  
+  return result[0] as Session;
+}
+
+/**
+ * Get session by token
+ */
+export async function getSessionByToken(token: string): Promise<Session | null> {
+  const result = await sql`
+    SELECT * FROM sessions
+    WHERE token = ${token} AND expires_at > NOW()
+    LIMIT 1
+  `;
+  
+  return (result[0] as Session) || null;
+}
+
+/**
+ * Update session last_used_at timestamp
+ */
+export async function updateSessionLastUsed(token: string): Promise<void> {
+  await sql`
+    UPDATE sessions
+    SET last_used_at = NOW()
+    WHERE token = ${token}
+  `;
+}
+
+/**
+ * Delete a session (logout)
+ */
+export async function deleteSession(token: string): Promise<void> {
+  await sql`
+    DELETE FROM sessions
+    WHERE token = ${token}
+  `;
+}
+
+/**
+ * Delete all sessions for a user (logout from all devices)
+ */
+export async function deleteAllUserSessions(userId: string): Promise<void> {
+  await sql`
+    DELETE FROM sessions
+    WHERE user_id = ${userId}
+  `;
+}
+
+/**
+ * Clean up expired sessions (can be run periodically)
+ */
+export async function cleanupExpiredSessions(): Promise<number> {
+  const result = await sql`
+    DELETE FROM sessions
+    WHERE expires_at < NOW()
+  `;
+  
+  return result.count || 0;
 }

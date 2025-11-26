@@ -1,34 +1,44 @@
 import { cookies } from "next/headers";
-import { getUserById } from "@/lib/queries";
+import { getUserById, getSessionByToken, updateSessionLastUsed } from "@/lib/queries";
 
-const USER_ID_COOKIE = "retoro_user_id";
+const SESSION_COOKIE = "retoro_session";
 
 /**
- * Get the current user ID from session cookie (Server-side only)
- * Returns a default user ID if cookie doesn't exist (cookie will be set client-side)
+ * Get the current user ID from session token (Server-side only)
+ * Returns a default user ID if session doesn't exist (session will be set client-side)
  */
 export async function getUserId(): Promise<string> {
   try {
     const cookieStore = await cookies();
-    const userId = cookieStore.get(USER_ID_COOKIE)?.value;
+    const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
     
-    if (userId) {
-      // Verify user exists and is valid
-      const user = await getUserById(userId);
-      if (user) {
-        return userId;
+    if (sessionToken) {
+      // Verify session exists and is valid
+      const session = await getSessionByToken(sessionToken);
+      
+      if (session) {
+        // Update last used timestamp
+        await updateSessionLastUsed(sessionToken);
+        
+        // Verify user still exists
+        const user = await getUserById(session.user_id);
+        if (user) {
+          return session.user_id;
+        } else {
+          console.warn(`User ID ${session.user_id} from session not found in database`);
+        }
       } else {
-        console.warn(`User ID ${userId} from cookie not found in database`);
+        console.log("Session token invalid or expired");
       }
     } else {
-      console.log("No user ID cookie found, using anonymous session");
+      console.log("No session cookie found, using anonymous session");
     }
     
-    // Return a temporary ID - cookie will be set client-side
+    // Return a temporary ID - session will be set client-side
     // This prevents errors during SSR
     return "demo-user-123";
   } catch (error) {
-    console.error("Error reading cookies:", error);
+    console.error("Error reading session:", error);
     return "demo-user-123";
   }
 }
@@ -39,10 +49,17 @@ export async function getUserId(): Promise<string> {
 export async function getCurrentUser() {
   try {
     const cookieStore = await cookies();
-    const userId = cookieStore.get(USER_ID_COOKIE)?.value;
+    const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
     
-    if (userId) {
-      return await getUserById(userId);
+    if (sessionToken) {
+      const session = await getSessionByToken(sessionToken);
+      
+      if (session) {
+        // Update last used timestamp
+        await updateSessionLastUsed(sessionToken);
+        
+        return await getUserById(session.user_id);
+      }
     }
     
     return null;
@@ -50,5 +67,20 @@ export async function getCurrentUser() {
     console.error("Error getting current user:", error);
     return null;
   }
+}
+
+/**
+ * Set session cookie (Server-side only)
+ * Used by auth endpoints to create sessions
+ */
+export async function setSessionCookie(sessionToken: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30, // 30 days (matches session expiration)
+  });
 }
 

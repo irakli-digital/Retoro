@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, getUserByEmail, migrateAnonymousData } from "@/lib/queries";
-import { cookies } from "next/headers";
+import { createUser, getUserByEmail, migrateAnonymousData, createSession } from "@/lib/queries";
+import { generateSessionToken, getSessionExpiration } from "@/lib/auth-utils";
+import { setSessionCookie } from "@/lib/auth-server";
 
 /**
  * Google OAuth callback handler
@@ -106,17 +107,21 @@ export async function GET(request: NextRequest) {
       console.log(`Migrated ${migratedCount} items from anonymous session`);
     }
 
-    // Set session cookie
-    const cookieStore = await cookies();
-    cookieStore.set("retoro_user_id", userId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365, // 1 year
-    });
+    // Create session token
+    const sessionToken = generateSessionToken();
+    const expiresAt = getSessionExpiration();
     
-    console.log(`OAuth success: Set cookie for user ${userId}, migrated ${anonymousUserId ? 'items' : 'no items'}`);
+    // Get IP address and user agent for session tracking
+    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
+    const userAgent = request.headers.get("user-agent") || null;
+    
+    // Create session in database
+    await createSession(userId, sessionToken, expiresAt, ipAddress, userAgent);
+    
+    // Set session cookie
+    await setSessionCookie(sessionToken);
+    
+    console.log(`OAuth success: Created session for user ${userId}, migrated ${anonymousUserId ? 'items' : 'no items'}`);
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL("/?oauth_success=true", request.url));

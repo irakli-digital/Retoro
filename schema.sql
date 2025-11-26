@@ -87,6 +87,23 @@ CREATE INDEX IF NOT EXISTS idx_magic_tokens_token ON magic_link_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_magic_tokens_user_id ON magic_link_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_magic_tokens_expires ON magic_link_tokens(expires_at);
 
+-- Sessions table for secure session management
+CREATE TABLE IF NOT EXISTS sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  last_used_at TIMESTAMP DEFAULT NOW(),
+  ip_address VARCHAR(45), -- IPv6 compatible
+  user_agent TEXT
+);
+
+-- Indexes for sessions
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
 -- Return Tracker Tables
 
 -- Retailer policies table

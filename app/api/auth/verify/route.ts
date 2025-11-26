@@ -3,9 +3,11 @@ import {
   getMagicLinkToken, 
   markMagicLinkTokenAsUsed,
   updateUserEmailVerified,
-  getUserById
+  getUserById,
+  createSession
 } from "@/lib/queries";
-import { cookies } from "next/headers";
+import { generateSessionToken, getSessionExpiration } from "@/lib/auth-utils";
+import { setSessionCookie } from "@/lib/auth-server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,14 +46,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Create session token
+    const sessionToken = generateSessionToken();
+    const expiresAt = getSessionExpiration();
+    
+    // Get IP address and user agent for session tracking
+    const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null;
+    const userAgent = request.headers.get("user-agent") || null;
+    
+    // Create session in database
+    await createSession(user.id, sessionToken, expiresAt, ipAddress, userAgent);
+    
     // Set session cookie
-    const cookieStore = await cookies();
-    cookieStore.set("retoro_user_id", user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 365, // 1 year
-    });
+    await setSessionCookie(sessionToken);
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL("/", request.url));
