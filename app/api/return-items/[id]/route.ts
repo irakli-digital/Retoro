@@ -6,8 +6,12 @@ import {
   getRetailerPolicy 
 } from "@/lib/queries";
 import { calculateDeadline } from "@/lib/return-logic";
+import { getUserId } from "@/lib/auth-server";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
+
+const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 // GET single return item
 export async function GET(
@@ -121,12 +125,55 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json();
-    const { is_returned, user_id } = body;
+    const { is_returned, user_id: provided_user_id } = body;
 
-    if (typeof is_returned !== "boolean" || !user_id) {
+    if (typeof is_returned !== "boolean") {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required field: is_returned" },
         { status: 400 }
+      );
+    }
+
+    // Get user ID - prioritize authenticated session over provided user_id
+    let user_id = await getUserId();
+    
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("retoro_session")?.value;
+    
+    console.log("[Return Items PATCH] User ID check:", {
+      userIdFromGetUserId: user_id,
+      providedUserId: provided_user_id,
+      hasSessionToken: !!sessionToken,
+      isDemoUser: user_id === "demo-user-123",
+    });
+    
+    // If user is not authenticated, use provided user_id or anonymous cookie
+    if (user_id === "demo-user-123") {
+      if (provided_user_id) {
+        user_id = provided_user_id;
+        console.log("[Return Items PATCH] Using provided user_id (anonymous):", user_id);
+      } else {
+        // Try anonymous cookie
+        const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+        if (anonymousUserId) {
+          user_id = anonymousUserId;
+          console.log("[Return Items PATCH] Using anonymous user ID from cookie:", user_id);
+        } else {
+          return NextResponse.json(
+            { error: "User ID required" },
+            { status: 401 }
+          );
+        }
+      }
+    } else {
+      console.log("[Return Items PATCH] ✅ Using authenticated user ID:", user_id);
+      // User is authenticated - always use their real user ID, ignore provided_user_id
+    }
+
+    if (!user_id || user_id === "demo-user-123") {
+      return NextResponse.json(
+        { error: "Unable to determine user session" },
+        { status: 401 }
       );
     }
 
@@ -140,6 +187,10 @@ export async function PATCH(
     }
 
     if (existingItem.user_id !== user_id) {
+      console.error("[Return Items PATCH] Unauthorized:", {
+        itemUserId: existingItem.user_id,
+        requestUserId: user_id,
+      });
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -148,6 +199,12 @@ export async function PATCH(
 
     const returnedDate = is_returned ? new Date() : null;
     await updateReturnStatus(params.id, is_returned, returnedDate);
+
+    console.log("[Return Items PATCH] ✅ Successfully updated return status:", {
+      itemId: params.id,
+      isReturned: is_returned,
+      userId: user_id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

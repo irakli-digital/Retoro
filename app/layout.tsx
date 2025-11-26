@@ -65,7 +65,7 @@ export default function RootLayout({
               {/* iOS-style tab bar - only shows on mobile and app pages */}
               <AppTabBar />
             </div>
-            <Toaster position="top-center" richColors />
+            <Toaster position="bottom-center" richColors />
           </SessionProvider>
         </ThemeProvider>
         
