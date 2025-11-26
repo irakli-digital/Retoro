@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
     // Get user ID from session (authenticated) or anonymous cookie
     let user_id = await getUserId();
     
+    console.log("[Invoice Upload] Initial user_id from getUserId():", user_id);
+    
     // If getUserId returned the demo user, try to get anonymous user ID from cookie
     if (user_id === "demo-user-123") {
       const cookieStore = await cookies();
@@ -27,9 +29,12 @@ export async function POST(request: NextRequest) {
       
       if (anonymousUserId) {
         user_id = anonymousUserId;
+        console.log("[Invoice Upload] Using anonymous user ID from cookie:", user_id);
       } else {
         // Generate a new anonymous user ID
         user_id = `user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        
+        console.log("[Invoice Upload] Generated new anonymous user ID:", user_id);
         
         // Set anonymous cookie
         cookieStore.set(ANONYMOUS_USER_COOKIE, user_id, {
@@ -40,14 +45,19 @@ export async function POST(request: NextRequest) {
           maxAge: 60 * 60 * 24 * 365, // 1 year
         });
       }
+    } else {
+      console.log("[Invoice Upload] Using authenticated user ID:", user_id);
     }
 
     if (!user_id || user_id === "demo-user-123") {
+      console.error("[Invoice Upload] Failed to determine user_id");
       return NextResponse.json(
         { error: "Unable to determine user session" },
         { status: 401 }
       );
     }
+    
+    console.log("[Invoice Upload] Final user_id being sent to n8n:", user_id);
 
     const formData = await request.formData();
     const file = formData.get("invoice") as File;

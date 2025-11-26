@@ -4,12 +4,16 @@ import {
   markMagicLinkTokenAsUsed,
   updateUserEmailVerified,
   getUserById,
-  createSession
+  createSession,
+  migrateAnonymousData
 } from "@/lib/queries";
 import { generateSessionToken, getSessionExpiration } from "@/lib/auth-utils";
 import { setSessionCookie } from "@/lib/auth-server";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
+
+const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +50,18 @@ export async function GET(request: NextRequest) {
         { error: "User not found" },
         { status: 404 }
       );
+    }
+
+    // Migrate anonymous session data if cookie exists (user logged in after uploading items anonymously)
+    const cookieStore = await cookies();
+    const anonymousUserIdFromCookie = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+    
+    if (anonymousUserIdFromCookie) {
+      const migratedCount = await migrateAnonymousData(anonymousUserIdFromCookie, user.id);
+      console.log(`[Magic Link Verify] Migrated ${migratedCount} items from anonymous session (${anonymousUserIdFromCookie}) to user ${user.id}`);
+      
+      // Clear anonymous cookie after migration
+      cookieStore.delete(ANONYMOUS_USER_COOKIE);
     }
 
     // Create session token

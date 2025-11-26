@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUserByEmail, migrateAnonymousData, createSession } from "@/lib/queries";
 import { generateSessionToken, getSessionExpiration } from "@/lib/auth-utils";
 import { setSessionCookie } from "@/lib/auth-server";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
+
+const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 /**
  * Google OAuth callback handler
@@ -107,10 +110,21 @@ export async function GET(request: NextRequest) {
       userId = await createUser(email, name || null, null, true);
     }
 
-    // Migrate anonymous session data if provided
-    if (anonymousUserId) {
-      const migratedCount = await migrateAnonymousData(anonymousUserId, userId);
-      console.log(`Migrated ${migratedCount} items from anonymous session`);
+    // Migrate anonymous session data - check both state param and cookie
+    const cookieStore = await cookies();
+    const anonymousUserIdFromCookie = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+    const anonymousUserIdToMigrate = anonymousUserId || anonymousUserIdFromCookie;
+    
+    if (anonymousUserIdToMigrate) {
+      const migratedCount = await migrateAnonymousData(anonymousUserIdToMigrate, userId);
+      console.log(`[Google OAuth] Migrated ${migratedCount} items from anonymous session (${anonymousUserIdToMigrate}) to user ${userId}`);
+      
+      // Clear anonymous cookie after migration
+      if (anonymousUserIdFromCookie) {
+        cookieStore.delete(ANONYMOUS_USER_COOKIE);
+      }
+    } else {
+      console.log(`[Google OAuth] No anonymous data to migrate for user ${userId}`);
     }
 
     // Create session token

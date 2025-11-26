@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUserByEmail, migrateAnonymousData, createMagicLinkToken } from "@/lib/queries";
 import { generateMagicLinkToken } from "@/lib/auth-utils";
+import { cookies } from "next/headers";
+
+const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 // Magic link tokens table (we'll create this in schema)
 // For MVP, we'll use a simple approach with expiration
@@ -28,10 +31,21 @@ export async function POST(request: NextRequest) {
       userId = await createUser(email, name || null, null, false);
     }
 
-    // Migrate anonymous session data if provided
-    if (anonymous_user_id) {
-      const migratedCount = await migrateAnonymousData(anonymous_user_id, userId);
-      console.log(`Migrated ${migratedCount} items from anonymous session`);
+    // Migrate anonymous session data - check both request body and cookie
+    const cookieStore = await cookies();
+    const anonymousUserIdFromCookie = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+    const anonymousUserIdToMigrate = anonymous_user_id || anonymousUserIdFromCookie;
+    
+    if (anonymousUserIdToMigrate) {
+      const migratedCount = await migrateAnonymousData(anonymousUserIdToMigrate, userId);
+      console.log(`[Magic Link Registration] Migrated ${migratedCount} items from anonymous session (${anonymousUserIdToMigrate}) to user ${userId}`);
+      
+      // Clear anonymous cookie after migration
+      if (anonymousUserIdFromCookie) {
+        cookieStore.delete(ANONYMOUS_USER_COOKIE);
+      }
+    } else {
+      console.log(`[Magic Link Registration] No anonymous data to migrate for user ${userId}`);
     }
 
     // Generate magic link token
