@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     await updateUserEmailVerified(magicToken.user_id);
 
     // Redirect to dashboard with success message
-    const url = new URL("/", request.url);
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    const url = new URL("/", baseUrl);
     url.searchParams.set("verified", "true");
     return NextResponse.redirect(url);
   } catch (error) {

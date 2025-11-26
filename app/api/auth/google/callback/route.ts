@@ -9,13 +9,18 @@ import { setSessionCookie } from "@/lib/auth-server";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Determine the base URL for redirects
+    // In production (Railway), request.url might be internal (localhost) due to proxy
+    // So we prefer NEXT_PUBLIC_SITE_URL if available
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");
 
     if (error) {
-      return NextResponse.redirect(new URL("/?error=oauth_cancelled", request.url));
+      return NextResponse.redirect(new URL("/?error=oauth_cancelled", baseUrl));
     }
 
     if (!code) {
@@ -39,13 +44,12 @@ export async function GET(request: NextRequest) {
     // Exchange code for access token with Google
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    // Use the request origin to match what the button sent (works for both dev and prod)
-    const requestUrl = new URL(request.url);
-    const redirectUri = `${requestUrl.origin}/api/auth/google/callback`;
+    
+    const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
       console.error("Google OAuth credentials not configured");
-      return NextResponse.redirect(new URL("/?error=oauth_not_configured", request.url));
+      return NextResponse.redirect(new URL("/?error=oauth_not_configured", baseUrl));
     }
 
     // Exchange authorization code for access token
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
       console.error("Token exchange error:", errorData);
-      return NextResponse.redirect(new URL("/?error=token_exchange_failed", request.url));
+      return NextResponse.redirect(new URL("/?error=token_exchange_failed", baseUrl));
     }
 
     const tokenData = await tokenResponse.json();
@@ -80,14 +84,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!userInfoResponse.ok) {
-      return NextResponse.redirect(new URL("/?error=user_info_failed", request.url));
+      return NextResponse.redirect(new URL("/?error=user_info_failed", baseUrl));
     }
 
     const userInfo = await userInfoResponse.json();
     const { email, name, picture } = userInfo;
 
     if (!email) {
-      return NextResponse.redirect(new URL("/?error=no_email", request.url));
+      return NextResponse.redirect(new URL("/?error=no_email", baseUrl));
     }
 
     // Check if user already exists
@@ -124,10 +128,11 @@ export async function GET(request: NextRequest) {
     console.log(`OAuth success: Created session for user ${userId}, migrated ${anonymousUserId ? 'items' : 'no items'}`);
 
     // Redirect to dashboard
-    return NextResponse.redirect(new URL("/?oauth_success=true", request.url));
+    return NextResponse.redirect(new URL("/?oauth_success=true", baseUrl));
   } catch (error) {
     console.error("Google OAuth callback error:", error);
-    return NextResponse.redirect(new URL("/?error=oauth_failed", request.url));
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    return NextResponse.redirect(new URL("/?error=oauth_failed", baseUrl));
   }
 }
 

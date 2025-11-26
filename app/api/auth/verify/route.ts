@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
     await setSessionCookie(sessionToken);
 
     // Redirect to dashboard
-    return NextResponse.redirect(new URL("/", request.url));
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    return NextResponse.redirect(new URL("/", baseUrl));
   } catch (error) {
     console.error("Verification error:", error);
     return NextResponse.json(
