@@ -75,19 +75,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to base64 for n8n webhook
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64Image = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64Image}`;
-
     // Get n8n webhook URL from environment
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     
-    if (!n8nWebhookUrl) {
-      console.error("N8N_WEBHOOK_URL not configured");
+    console.log("[Invoice Upload] Environment check:", {
+      hasN8N_WEBHOOK_URL: !!process.env.N8N_WEBHOOK_URL,
+      hasNEXT_PUBLIC_N8N_WEBHOOK_URL: !!process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL,
+      webhookUrl: n8nWebhookUrl ? `${n8nWebhookUrl.substring(0, 30)}...` : "NOT SET",
+    });
+    
+    if (!n8nWebhookUrl || n8nWebhookUrl.includes("your-n8n-instance.com")) {
+      console.error("[Invoice Upload] N8N_WEBHOOK_URL not configured or is placeholder");
       return NextResponse.json(
-        { error: "Invoice processing service not configured" },
+        { error: "Invoice processing service not configured. Please contact support." },
         { status: 500 }
       );
     }
@@ -95,30 +95,86 @@ export async function POST(request: NextRequest) {
     // Generate job ID for tracking
     const jobId = `invoice_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 
-    // Call n8n webhook with image and user_id
-    const n8nResponse = await fetch(n8nWebhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: dataUrl,
-        mimeType: file.type,
-        user_id: user_id, // Pass user_id to n8n
-        job_id: jobId,
-      }),
+    // Read file as buffer for binary upload
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    console.log("[Invoice Upload] Calling n8n webhook:", {
+      url: n8nWebhookUrl,
+      jobId,
+      userId: user_id,
+      fileSize: file.size,
+      fileType: file.type,
     });
 
-    if (!n8nResponse.ok) {
-      const errorText = await n8nResponse.text();
-      console.error("N8N webhook error:", errorText);
+    // Call n8n webhook with binary image data
+    // n8n webhook with binaryData: true can receive raw binary with metadata in headers
+    // Or we can use multipart/form-data
+    const webhookUrl = new URL(n8nWebhookUrl);
+    webhookUrl.searchParams.append("user_id", user_id);
+    webhookUrl.searchParams.append("job_id", jobId);
+    webhookUrl.searchParams.append("mimeType", file.type);
+
+    let n8nResponse;
+    try {
+      n8nResponse = await fetch(webhookUrl.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type,
+          "X-User-Id": user_id,
+          "X-Job-Id": jobId,
+        },
+        body: buffer, // Send raw binary data
+        // Add timeout to prevent hanging
+        signal: AbortSignal.timeout(60000), // 60 second timeout
+      });
+    } catch (fetchError: any) {
+      console.error("[Invoice Upload] Fetch error:", {
+        error: fetchError.message,
+        name: fetchError.name,
+        code: fetchError.code,
+      });
+      
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: "Invoice processing timed out. Please try again." },
+          { status: 504 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: "Failed to process invoice" },
+        { error: `Failed to connect to invoice processing service: ${fetchError.message}` },
         { status: 500 }
       );
     }
 
-    const n8nResult = await n8nResponse.json();
+    console.log("[Invoice Upload] N8N response status:", n8nResponse.status);
+
+    if (!n8nResponse.ok) {
+      const errorText = await n8nResponse.text();
+      console.error("[Invoice Upload] N8N webhook error:", {
+        status: n8nResponse.status,
+        statusText: n8nResponse.statusText,
+        error: errorText,
+      });
+      return NextResponse.json(
+        { error: `Invoice processing failed: ${n8nResponse.statusText}` },
+        { status: 500 }
+      );
+    }
+
+    let n8nResult;
+    try {
+      n8nResult = await n8nResponse.json();
+      console.log("[Invoice Upload] N8N result received:", {
+        hasResult: !!n8nResult,
+        itemsCreated: n8nResult?.items_created?.length || 0,
+      });
+    } catch (jsonError: any) {
+      console.error("[Invoice Upload] Failed to parse n8n response:", jsonError);
+      // Still return success if webhook was called successfully
+      n8nResult = { message: "Invoice processing initiated" };
+    }
 
     // Return job ID and initial status
     return NextResponse.json({
@@ -128,10 +184,14 @@ export async function POST(request: NextRequest) {
       message: "Invoice is being processed",
       result: n8nResult, // Include n8n response for immediate results if available
     });
-  } catch (error) {
-    console.error("Error uploading invoice:", error);
+  } catch (error: any) {
+    console.error("[Invoice Upload] Unexpected error:", {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
     return NextResponse.json(
-      { error: "Failed to upload invoice" },
+      { error: `Failed to upload invoice: ${error.message || "Unknown error"}` },
       { status: 500 }
     );
   }

@@ -179,40 +179,27 @@ export default function AddPurchasePage() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        timeout: 30000, // 30 second timeout for initial response
+        timeout: 60000, // 60 second timeout for n8n processing
       })
 
       const { job_id, status, result } = response.data
 
-      if (status === "processing") {
-        toast.info("Processing invoice... This may take a moment.")
-        
-        // Poll for results (n8n webhook should respond with results)
-        // For now, check if result is immediately available
-        if (result && result.items_created && result.items_created.length > 0) {
-          toast.success(`Successfully processed invoice! Added ${result.items_created.length} item(s).`)
-          // Refresh the page to show new items
-          setTimeout(() => {
-            router.push("/")
-          }, 1500)
-        } else {
-          // If no immediate result, show success message
-          toast.success("Invoice processed successfully! Refreshing...")
-          setTimeout(() => {
-            router.push("/")
-          }, 2000)
-        }
+      // Show success message
+      if (result && result.items_created && result.items_created.length > 0) {
+        toast.success(`Successfully processed invoice! Added ${result.items_created.length} item(s).`)
       } else {
-        toast.success("Invoice processed successfully!")
-        router.push("/")
+        toast.success("Invoice processed successfully! Items are being added...")
       }
+      
+      // Redirect immediately to dashboard
+      router.push("/")
+      
     } catch (error: any) {
       console.error("Error uploading invoice:", error)
       const errorMessage = error.response?.data?.error || error.message || "Failed to upload invoice. Please try again."
       toast.error(errorMessage)
-    } finally {
       setUploadingInvoice(false)
-      // Reset file input
+      // Reset file input on error
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
@@ -320,7 +307,28 @@ export default function AddPurchasePage() {
           </Card>
         </div>
 
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+        {/* Show loading state when uploading invoice */}
+        {uploadingInvoice && (
+          <div className="max-w-2xl mx-auto mt-8">
+            <Card className="ios-rounded">
+              <CardContent className="p-8">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-2">Processing Invoice</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Extracting data from your invoice and adding items to your dashboard...
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Hide form when uploading invoice */}
+        {!uploadingInvoice && (
+          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
           {/* Retailer Selection - Live Search */}
           <div className="space-y-2 relative">
             <Label htmlFor="retailer" className="text-sm font-medium">Retailer</Label>
@@ -497,6 +505,7 @@ export default function AddPurchasePage() {
             </a>
           </div>
         </form>
+        )}
       </main>
 
       {/* Add Retailer Dialog */}

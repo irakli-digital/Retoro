@@ -26,24 +26,93 @@ export async function GET(request: NextRequest) {
     
     // If search parameter provided, do fuzzy search (for invoice scraper)
     if (search) {
-      const searchLower = search.toLowerCase();
+      const searchLower = search.toLowerCase().trim();
       const matched = retailers.filter((r) => {
         const nameLower = r.name.toLowerCase();
-        // Exact match
-        if (nameLower === searchLower) return true;
-        // Contains match
-        if (nameLower.includes(searchLower) || searchLower.includes(nameLower)) return true;
-        // Word boundary match (e.g., "amazon" matches "Amazon.com")
-        const nameWords = nameLower.split(/[\s\-\.]+/);
-        const searchWords = searchLower.split(/[\s\-\.]+/);
-        return nameWords.some(word => searchWords.includes(word)) ||
-               searchWords.some(word => nameWords.includes(word));
+        const idLower = r.id.toLowerCase();
+        const websiteUrlLower = (r.website_url || '').toLowerCase();
+        
+        // 1. Exact match on name
+        if (nameLower === searchLower) {
+          console.log(`[Retailers API] Exact name match: "${r.name}"`);
+          return true;
+        }
+        
+        // 2. Exact match on ID
+        if (idLower === searchLower) {
+          console.log(`[Retailers API] Exact ID match: "${r.id}" (name: "${r.name}")`);
+          return true;
+        }
+        
+        // 3. Exact match on website URL domain (extract domain from URL)
+        if (websiteUrlLower) {
+          try {
+            const url = new URL(websiteUrlLower);
+            const domain = url.hostname.replace(/^www\./, ''); // Remove www.
+            if (domain === searchLower || domain.includes(searchLower) || searchLower.includes(domain)) {
+              console.log(`[Retailers API] Website URL match: "${r.website_url}" (domain: "${domain}")`);
+              return true;
+            }
+          } catch (e) {
+            // If URL parsing fails, try direct string match
+            if (websiteUrlLower.includes(searchLower) || searchLower.includes(websiteUrlLower)) {
+              console.log(`[Retailers API] Website URL string match: "${r.website_url}"`);
+              return true;
+            }
+          }
+        }
+        
+        // 4. Name contains search or search contains name
+        if (nameLower.includes(searchLower) || searchLower.includes(nameLower)) {
+          console.log(`[Retailers API] Name contains match: "${r.name}"`);
+          return true;
+        }
+        
+        // 5. ID contains search or search contains ID
+        if (idLower.includes(searchLower) || searchLower.includes(idLower)) {
+          console.log(`[Retailers API] ID contains match: "${r.id}" (name: "${r.name}")`);
+          return true;
+        }
+        
+        // 6. Word boundary match (split by dots, hyphens, spaces)
+        // Remove common TLDs for better matching
+        const searchWithoutTld = searchLower.replace(/\.(com|net|org|io|ge|co|app|dev)$/, '');
+        const nameWithoutTld = nameLower.replace(/\.(com|net|org|io|ge|co|app|dev)$/, '');
+        
+        // Split by dots, hyphens, spaces
+        const nameWords = nameWithoutTld.split(/[\s\-\.]+/).filter(w => w.length > 0);
+        const searchWords = searchWithoutTld.split(/[\s\-\.]+/).filter(w => w.length > 0);
+        const idWords = idLower.split(/[\s\-\.]+/).filter(w => w.length > 0);
+        
+        // Check if any search word matches any name word
+        const nameWordMatch = nameWords.some(word => searchWords.includes(word)) ||
+                             searchWords.some(word => nameWords.includes(word));
+        
+        // Check if any search word matches any ID word
+        const idWordMatch = idWords.some(word => searchWords.includes(word)) ||
+                           searchWords.some(word => idWords.includes(word));
+        
+        if (nameWordMatch) {
+          console.log(`[Retailers API] Word boundary match (name): "${r.name}"`);
+          return true;
+        }
+        
+        if (idWordMatch) {
+          console.log(`[Retailers API] Word boundary match (ID): "${r.id}" (name: "${r.name}")`);
+          return true;
+        }
+        
+        return false;
       });
+      
       console.log(`[Retailers API] Search for "${search}": Found ${matched.length} matches`);
       if (matched.length > 0) {
-        console.log(`[Retailers API] Matched retailers:`, matched.map(r => r.name).join(', '));
+        console.log(`[Retailers API] Matched retailers:`, matched.map(r => `${r.name} (ID: ${r.id})`).join(', '));
       } else {
-        console.log(`[Retailers API] No matches found for "${search}". Available retailers:`, retailers.slice(0, 10).map(r => r.name).join(', '));
+        console.log(`[Retailers API] No matches found for "${search}".`);
+        console.log(`[Retailers API] Sample retailers in DB:`, retailers.slice(0, 10).map(r => `${r.name} (ID: ${r.id})`).join(', '));
+        console.log(`[Retailers API] All retailer names:`, retailers.map(r => r.name).join(', '));
+        console.log(`[Retailers API] All retailer IDs:`, retailers.map(r => r.id).join(', '));
       }
       // Return array (n8n will handle empty arrays if "Always Output Data" is enabled)
       return NextResponse.json(matched);
