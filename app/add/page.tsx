@@ -170,12 +170,46 @@ export default function AddPurchasePage() {
     setUploadingInvoice(true)
 
     try {
-      // TODO: Implement invoice upload and parsing logic
-      // For now, just show a toast
-      toast.info("Invoice upload feature coming soon")
+      // Create FormData with the invoice file
+      const formData = new FormData()
+      formData.append("invoice", file)
+
+      // Upload invoice and trigger n8n processing
+      const response = await axios.post("/api/upload/invoice", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 30000, // 30 second timeout for initial response
+      })
+
+      const { job_id, status, result } = response.data
+
+      if (status === "processing") {
+        toast.info("Processing invoice... This may take a moment.")
+        
+        // Poll for results (n8n webhook should respond with results)
+        // For now, check if result is immediately available
+        if (result && result.items_created && result.items_created.length > 0) {
+          toast.success(`Successfully processed invoice! Added ${result.items_created.length} item(s).`)
+          // Refresh the page to show new items
+          setTimeout(() => {
+            router.push("/")
+          }, 1500)
+        } else {
+          // If no immediate result, show success message
+          toast.success("Invoice processed successfully! Refreshing...")
+          setTimeout(() => {
+            router.push("/")
+          }, 2000)
+        }
+      } else {
+        toast.success("Invoice processed successfully!")
+        router.push("/")
+      }
     } catch (error: any) {
       console.error("Error uploading invoice:", error)
-      toast.error("Failed to upload invoice. Please try again.")
+      const errorMessage = error.response?.data?.error || error.message || "Failed to upload invoice. Please try again."
+      toast.error(errorMessage)
     } finally {
       setUploadingInvoice(false)
       // Reset file input
@@ -262,7 +296,7 @@ export default function AddPurchasePage() {
                   {uploadingInvoice ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      Processing Invoice...
                     </>
                   ) : (
                     <>
@@ -271,7 +305,12 @@ export default function AddPurchasePage() {
                     </>
                   )}
                 </Button>
-                {invoiceFile && (
+                {uploadingInvoice && (
+                  <p className="text-xs text-muted-foreground text-center animate-pulse">
+                    Extracting data from invoice... This may take a moment.
+                  </p>
+                )}
+                {invoiceFile && !uploadingInvoice && (
                   <p className="text-xs text-muted-foreground">
                     {invoiceFile.name}
                   </p>

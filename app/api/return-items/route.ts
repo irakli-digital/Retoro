@@ -12,7 +12,7 @@ const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { retailer_id, name, price, purchase_date } = body;
+    const { retailer_id, name, price, purchase_date, user_id: provided_user_id } = body;
 
     if (!retailer_id || !purchase_date) {
       return NextResponse.json(
@@ -21,8 +21,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user ID from session (authenticated) or anonymous cookie
-    let user_id = await getUserId();
+    // Get user ID - use provided user_id (from n8n) or get from session/cookie
+    let user_id = provided_user_id;
+    
+    // If no user_id provided (e.g., from web UI), get from session
+    if (!user_id) {
+      user_id = await getUserId();
+    }
     
     // If getUserId returned the demo user, try to get anonymous user ID from cookie
     if (user_id === "demo-user-123") {
