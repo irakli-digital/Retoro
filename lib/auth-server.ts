@@ -17,7 +17,11 @@ export async function getUserId(): Promise<string> {
       const user = await getUserById(userId);
       if (user) {
         return userId;
+      } else {
+        console.warn(`User ID ${userId} from cookie not found in database`);
       }
+    } else {
+      console.log("No user ID cookie found, using anonymous session");
     }
     
     // Return a temporary ID - cookie will be set client-side

@@ -25,7 +25,7 @@ export default async function HistoryPage() {
   }
 
   const returnedItems = allItems.filter(item => item.is_returned);
-  const keptItems = allItems.filter(item => !item.is_returned && new Date(item.return_deadline) < new Date());
+  const keptItems = allItems.filter(item => !item.is_returned);
   const totalValueReturned = returnedItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
   return (

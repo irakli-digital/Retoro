@@ -111,9 +111,6 @@ export default function AppTabBar() {
                     "h-5 w-5 transition-transform duration-200",
                     isActive && "scale-110"
                   )} />
-                  {isActive && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 bg-primary rounded-full animate-in fade-in duration-200" />
-                  )}
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium leading-none transition-colors duration-200",

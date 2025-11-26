@@ -11,6 +11,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import RegistrationBanner from "@/components/registration-banner";
+import OAuthHandler from "@/components/oauth-handler";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Return Tracker - Never Miss a Return Deadline",
@@ -37,6 +39,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col pb-[60px] md:pb-0">
+      <Suspense fallback={null}>
+        <OAuthHandler />
+      </Suspense>
       <AppHeader 
         title="Return Tracker" 
         largeTitle

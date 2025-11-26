@@ -19,10 +19,17 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = await getAllPostSlugs();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const posts = await getAllPostSlugs();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    // If posts table doesn't exist or query fails, return empty array
+    // This allows the build to succeed even without blog tables
+    console.warn("Blog posts table not found, skipping static generation:", error);
+    return [];
+  }
 }
 
 // Revalidate every 60 seconds - fresh content without full rebuild  

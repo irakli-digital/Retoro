@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
     // Exchange code for access token with Google
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/google/callback`;
+    // Use the request origin to match what the button sent (works for both dev and prod)
+    const requestUrl = new URL(request.url);
+    const redirectUri = `${requestUrl.origin}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
       console.error("Google OAuth credentials not configured");
@@ -110,8 +112,11 @@ export async function GET(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
+      path: "/",
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
+    
+    console.log(`OAuth success: Set cookie for user ${userId}, migrated ${anonymousUserId ? 'items' : 'no items'}`);
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL("/?oauth_success=true", request.url));

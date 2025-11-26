@@ -35,7 +35,7 @@ export default function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full ios-blur border-b border-border/50 bg-background/80",
+        "sticky top-0 z-40 w-full ios-blur border-b border-border bg-background",
         "safe-top transition-all duration-200",
         className
       )}

@@ -4,22 +4,31 @@ import { unstable_cache } from 'next/cache';
 
 export const getPublishedPosts = unstable_cache(
   async (limit?: number): Promise<BlogPostPreview[]> => {
-    const result = limit
-      ? await sql`
-          SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
-          FROM posts 
-          WHERE published = true 
-          ORDER BY published_at DESC 
-          LIMIT ${limit}
-        `
-      : await sql`
-          SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
-          FROM posts 
-          WHERE published = true 
-          ORDER BY published_at DESC
-        `;
-    
-    return result as BlogPostPreview[];
+    try {
+      const result = limit
+        ? await sql`
+            SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
+            FROM posts 
+            WHERE published = true 
+            ORDER BY published_at DESC 
+            LIMIT ${limit}
+          `
+        : await sql`
+            SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
+            FROM posts 
+            WHERE published = true 
+            ORDER BY published_at DESC
+          `;
+      
+      return result as BlogPostPreview[];
+    } catch (error: any) {
+      // If posts table doesn't exist, return empty array
+      if (error?.code === '42P01') {
+        console.warn("Posts table does not exist, returning empty posts");
+        return [];
+      }
+      throw error;
+    }
   },
   ['blog-posts'],
   {
@@ -30,13 +39,22 @@ export const getPublishedPosts = unstable_cache(
 
 export const getPostBySlug = unstable_cache(
   async (slug: string): Promise<BlogPost | null> => {
-    const result = await sql`
-      SELECT * FROM posts 
-      WHERE slug = ${slug} AND published = true 
-      LIMIT 1
-    `;
-    
-    return result[0] as BlogPost || null;
+    try {
+      const result = await sql`
+        SELECT * FROM posts 
+        WHERE slug = ${slug} AND published = true 
+        LIMIT 1
+      `;
+      
+      return result[0] as BlogPost || null;
+    } catch (error: any) {
+      // If posts table doesn't exist, return null
+      if (error?.code === '42P01') {
+        console.warn("Posts table does not exist");
+        return null;
+      }
+      throw error;
+    }
   },
   ['blog-post'],
   {
@@ -46,23 +64,41 @@ export const getPostBySlug = unstable_cache(
 );
 
 export async function getAllPostSlugs(): Promise<{ slug: string }[]> {
-  const result = await sql`
-    SELECT slug FROM posts WHERE published = true
-  `;
-  
-  return result as { slug: string }[];
+  try {
+    const result = await sql`
+      SELECT slug FROM posts WHERE published = true
+    `;
+    
+    return result as { slug: string }[];
+  } catch (error: any) {
+    // If posts table doesn't exist, return empty array
+    if (error?.code === '42P01') {
+      console.warn("Posts table does not exist, returning empty slugs");
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getFeaturedPosts(limit: number = 3): Promise<BlogPostPreview[]> {
-  const result = await sql`
-    SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
-    FROM posts 
-    WHERE published = true AND featured_image IS NOT NULL
-    ORDER BY published_at DESC 
-    LIMIT ${limit}
-  `;
-  
-  return result as BlogPostPreview[];
+  try {
+    const result = await sql`
+      SELECT id, title, title_ka, slug, excerpt, excerpt_ka, published_at, author, featured_image 
+      FROM posts 
+      WHERE published = true AND featured_image IS NOT NULL
+      ORDER BY published_at DESC 
+      LIMIT ${limit}
+    `;
+    
+    return result as BlogPostPreview[];
+  } catch (error: any) {
+    // If posts table doesn't exist, return empty array
+    if (error?.code === '42P01') {
+      console.warn("Posts table does not exist, returning empty featured posts");
+      return [];
+    }
+    throw error;
+  }
 }
 
 // FAQ queries
