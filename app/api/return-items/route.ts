@@ -33,18 +33,25 @@ export async function POST(request: NextRequest) {
     // This ensures logged-in users always use their authenticated ID
     let user_id = await getUserId();
     
-    console.log("[Return Items] User ID from session:", user_id);
-    console.log("[Return Items] Provided user_id from n8n:", provided_user_id);
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("retoro_session")?.value;
     
-    // If user is not authenticated (demo-user-123), use the provided user_id from n8n
-    // This handles anonymous users who uploaded invoices
+    console.log("[Return Items] User ID check:", {
+      userIdFromGetUserId: user_id,
+      providedUserIdFromN8n: provided_user_id,
+      hasSessionToken: !!sessionToken,
+      isDemoUser: user_id === "demo-user-123",
+    });
+    
+    // CRITICAL: If user is authenticated (not demo-user-123), ALWAYS use their real ID
+    // Do NOT use provided_user_id from n8n when user is logged in
     if (user_id === "demo-user-123") {
+      // User is NOT authenticated - use provided user_id from n8n or anonymous cookie
       if (provided_user_id) {
         user_id = provided_user_id;
         console.log("[Return Items] Using provided user_id from n8n (anonymous):", user_id);
       } else {
         // No provided user_id and no session - try anonymous cookie
-        const cookieStore = await cookies();
         const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
         
         if (anonymousUserId) {
@@ -66,9 +73,14 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      console.log("[Return Items] Using authenticated user ID:", user_id);
-      // User is authenticated - always use their real user ID, ignore provided_user_id
-      // This ensures items created via n8n are associated with the logged-in user
+      // User IS authenticated - ALWAYS use their real user ID, ignore provided_user_id from n8n
+      // Clear any anonymous cookie to prevent confusion
+      const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+      if (anonymousUserId) {
+        console.log("[Return Items] Clearing anonymous cookie (user is authenticated):", anonymousUserId);
+        cookieStore.set(ANONYMOUS_USER_COOKIE, "", { maxAge: 0, path: "/" });
+      }
+      console.log("[Return Items] ✅ Using authenticated user ID (ignoring n8n provided_user_id):", user_id);
     }
 
     if (!user_id || user_id === "demo-user-123") {

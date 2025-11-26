@@ -27,47 +27,64 @@ export function CurrencyTotal({ items, preferredCurrency, className = "" }: Curr
     }
 
     // Calculate total in preferred currency
-    const convertAll = async () => {
+    // Strategy: Sum all USD prices first, then convert the total (more accurate and efficient)
+    const calculateTotal = async () => {
       try {
-        const conversions = await Promise.all(
-          items
-            .filter(item => item.price && item.price > 0)
-            .map(async (item) => {
-              const originalCurrency = item.original_currency || 'USD'
-              
-              if (originalCurrency === preferredCurrency) {
-                return item.price!
-              }
+        // First, sum all USD prices (use price_usd if available, otherwise convert price to USD)
+        let totalUsd = 0
+        
+        for (const item of items) {
+          if (!item.price || item.price <= 0) continue
+          
+          const originalCurrency = item.original_currency || 'USD'
+          
+          if (originalCurrency === 'USD') {
+            // Already in USD, use price directly
+            totalUsd += Number(item.price) || 0
+          } else if (item.price_usd) {
+            // Use pre-calculated USD price (most accurate)
+            totalUsd += Number(item.price_usd) || 0
+          } else {
+            // Fallback: use price as-is (assume USD if no conversion available)
+            console.warn(`Item missing price_usd, using price as USD: ${item.price}`)
+            totalUsd += Number(item.price) || 0
+          }
+        }
 
-              try {
-                const response = await axios.get("/api/currency/convert", {
-                  params: {
-                    amount: item.price,
-                    from: originalCurrency,
-                    to: preferredCurrency,
-                  },
-                })
-                return response.data.converted
-              } catch (error) {
-                // Fallback to USD price if conversion fails
-                return item.price_usd || item.price || 0
-              }
-            })
-        )
+        // If preferred currency is USD, we're done
+        if (preferredCurrency === 'USD') {
+          setTotal(totalUsd)
+          setLoading(false)
+          return
+        }
 
-        const sum = conversions.reduce((acc, val) => acc + val, 0)
-        setTotal(sum)
-        setLoading(false)
+        // Convert total USD to preferred currency
+        try {
+          const response = await axios.get("/api/currency/convert", {
+            params: {
+              amount: totalUsd,
+              from: 'USD',
+              to: preferredCurrency,
+            },
+          })
+          setTotal(response.data.converted)
+          setLoading(false)
+        } catch (error) {
+          console.error("Error converting total:", error)
+          // Fallback: return USD total
+          setTotal(totalUsd)
+          setLoading(false)
+        }
       } catch (error) {
         console.error("Error calculating total:", error)
         // Fallback: sum USD prices
-        const usdSum = items.reduce((sum, item) => sum + (item.price_usd || 0), 0)
+        const usdSum = items.reduce((sum, item) => sum + (Number(item.price_usd) || Number(item.price) || 0), 0)
         setTotal(usdSum)
         setLoading(false)
       }
     }
 
-    convertAll()
+    calculateTotal()
   }, [items, preferredCurrency])
 
   if (loading) {

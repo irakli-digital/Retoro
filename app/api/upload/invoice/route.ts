@@ -20,11 +20,19 @@ export async function POST(request: NextRequest) {
     // Get user ID from session (authenticated) or anonymous cookie
     let user_id = await getUserId();
     
-    console.log("[Invoice Upload] Initial user_id from getUserId():", user_id);
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("retoro_session")?.value;
     
-    // If getUserId returned the demo user, try to get anonymous user ID from cookie
+    console.log("[Invoice Upload] User ID check:", {
+      userIdFromGetUserId: user_id,
+      hasSessionToken: !!sessionToken,
+      isDemoUser: user_id === "demo-user-123",
+    });
+    
+    // CRITICAL: If user is authenticated (not demo-user-123), ALWAYS use their real ID
+    // Do NOT fall back to anonymous cookies when user is logged in
     if (user_id === "demo-user-123") {
-      const cookieStore = await cookies();
+      // User is NOT authenticated - use anonymous cookie or generate new
       const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
       
       if (anonymousUserId) {
@@ -46,18 +54,25 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      console.log("[Invoice Upload] Using authenticated user ID:", user_id);
+      // User IS authenticated - use their real user ID
+      // Clear any anonymous cookie to prevent confusion
+      const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+      if (anonymousUserId) {
+        console.log("[Invoice Upload] Clearing anonymous cookie (user is authenticated):", anonymousUserId);
+        cookieStore.set(ANONYMOUS_USER_COOKIE, "", { maxAge: 0, path: "/" });
+      }
+      console.log("[Invoice Upload] ✅ Using authenticated user ID:", user_id);
     }
 
     if (!user_id || user_id === "demo-user-123") {
-      console.error("[Invoice Upload] Failed to determine user_id");
+      console.error("[Invoice Upload] ❌ Failed to determine user_id");
       return NextResponse.json(
         { error: "Unable to determine user session" },
         { status: 401 }
       );
     }
     
-    console.log("[Invoice Upload] Final user_id being sent to n8n:", user_id);
+    console.log("[Invoice Upload] ✅ Final user_id being sent to n8n:", user_id);
 
     const formData = await request.formData();
     const file = formData.get("invoice") as File;
