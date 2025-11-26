@@ -2,55 +2,6 @@
   "nodes": [
     {
       "parameters": {
-        "path": "invoice-process",
-        "responseMode": "lastNode",
-        "options": {}
-      },
-      "id": "6168d009-5607-4985-bb05-5b6326eba476",
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        80,
-        240
-      ],
-      "webhookId": "invoice-process"
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.body.image_url }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file"
-            }
-          }
-        }
-      },
-      "id": "209fad32-2cc1-4667-b6a5-c8323625053a",
-      "name": "Download Image",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        304,
-        240
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse OpenAI response and extract JSON\nconst response = $input.item.json;\nlet invoiceData;\n\ntry {\n  // Extract content from OpenAI response structure\n  let content;\n  \n  // Handle different OpenAI response formats\n  if (response.choices && response.choices[0] && response.choices[0].message) {\n    content = response.choices[0].message.content;\n  } else if (response.message && response.message.content) {\n    content = response.message.content;\n  } else if (response.content) {\n    content = response.content;\n  } else if (typeof response === 'string') {\n    content = response;\n  } else {\n    content = JSON.stringify(response);\n  }\n  \n  // Extract JSON from content (handle markdown code blocks)\n  const jsonMatch = content.match(/```(?:json)?\\s*([\\s\\S]*?)```/) || content.match(/\\{[\\s\\S]*\\}/);\n  \n  if (jsonMatch) {\n    const jsonString = jsonMatch[1] || jsonMatch[0];\n    invoiceData = JSON.parse(jsonString.trim());\n  } else {\n    invoiceData = JSON.parse(content);\n  }\n} catch (e) {\n  throw new Error(`Failed to parse invoice data: ${e.message}. Response: ${JSON.stringify(response)}`);\n}\n\n// Validate required fields\nif (!invoiceData.retailer_name) {\n  throw new Error('Retailer name not found in invoice');\n}\n\nif (!invoiceData.purchase_date) {\n  throw new Error('Purchase date not found in invoice');\n}\n\nif (!invoiceData.items || !Array.isArray(invoiceData.items) || invoiceData.items.length === 0) {\n  throw new Error('No items found in invoice');\n}\n\n// Ensure items have required fields\ninvoiceData.items = invoiceData.items.map(item => ({\n  name: item.name || 'Unnamed Item',\n  price: item.price || 0,\n  quantity: item.quantity || 1\n}));\n\nreturn {\n  json: {\n    retailer_name: invoiceData.retailer_name,\n    purchase_date: invoiceData.purchase_date,\n    order_number: invoiceData.order_number || null,\n    total_amount: invoiceData.total_amount || null,\n    items: invoiceData.items,\n    user_id: $input.item.json.body?.user_id || $('Webhook Trigger').item.json.body.user_id\n  }\n};"
-      },
-      "id": "04bb1595-1b1a-4263-a852-74aa2d266804",
-      "name": "Parse Invoice Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        752,
-        240
-      ]
-    },
-    {
-      "parameters": {
         "url": "={{ $env.RETORO_API_URL }}/retailers?search={{ encodeURIComponent($json.retailer_name) }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -59,19 +10,19 @@
           "parameters": [
             {
               "name": "X-API-Key",
-              "value": "={{ $env.RETORO_API_KEY }}"
+              "value": "={{ $json.RETORO_API_KEY }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "78b7bca4-9aca-454e-b160-39dd5abd3ed3",
+      "id": "75c12bea-c6e5-4d5c-91e3-64fd1b77c3fc",
       "name": "Search Retailer",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        976,
-        240
+        1280,
+        -400
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -82,15 +33,15 @@
     },
     {
       "parameters": {
-        "jsCode": "// Match retailer from search results\nconst searchResults = $input.item.json;\nconst invoiceRetailerName = $('Parse Invoice Data').item.json.retailer_name.toLowerCase();\n\nlet matchedRetailer = null;\n\nif (searchResults && searchResults.length > 0) {\n  // Try exact match first\n  matchedRetailer = searchResults.find(r => r.name.toLowerCase() === invoiceRetailerName);\n  \n  // Try fuzzy match\n  if (!matchedRetailer) {\n    matchedRetailer = searchResults.find(r => \n      r.name.toLowerCase().includes(invoiceRetailerName) || \n      invoiceRetailerName.includes(r.name.toLowerCase())\n    );\n  }\n  \n  // Take first result if no match\n  if (!matchedRetailer && searchResults.length > 0) {\n    matchedRetailer = searchResults[0];\n  }\n}\n\nif (!matchedRetailer) {\n  throw new Error(`Retailer '${invoiceRetailerName}' not found in database`);\n}\n\nreturn {\n  json: {\n    retailer_id: matchedRetailer.id,\n    retailer_name: matchedRetailer.name,\n    ...$('Parse Invoice Data').item.json\n  }\n};"
+        "jsCode": "// Match retailer from search results\nconst searchResults = $input.item.json;\nconst invoiceRetailerName = $('Parse Invoice Data').item.json.retailer_name.toLowerCase();\n\nlet matchedRetailer = null;\n\nif (searchResults && searchResults.length > 0) {\n  // Try exact match first\n  matchedRetailer = searchResults.find(r => r.name.toLowerCase() === invoiceRetailerName);\n  \n  // Try fuzzy match\n  if (!matchedRetailer) {\n    matchedRetailer = searchResults.find(r => r.name.toLowerCase().includes(invoiceRetailerName) || invoiceRetailerName.includes(r.name.toLowerCase()));\n  }\n  \n  // Take first result if no match\n  if (!matchedRetailer && searchResults.length > 0) {\n    matchedRetailer = searchResults[0];\n  }\n}\n\nif (!matchedRetailer) {\n  throw new Error(`Retailer '${invoiceRetailerName}' not found in database`);\n}\n\nreturn {\n  json: {\n    retailer_id: matchedRetailer.id,\n    retailer_name: matchedRetailer.name,\n    ...$('Parse Invoice Data').item.json\n  }\n};"
       },
-      "id": "01a34b2b-ae23-4ce4-bd4a-63f015b5649b",
+      "id": "c09531ca-84f6-4fb2-bdd3-903c3f59a247",
       "name": "Match Retailer",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
-        240
+        1456,
+        -400
       ]
     },
     {
@@ -131,13 +82,13 @@
         },
         "options": {}
       },
-      "id": "8eda045d-88bf-4c9e-b988-547339a6049d",
+      "id": "5466802b-0dfa-477e-943e-6a97740bdee6",
       "name": "Create Return Item",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1648,
-        240
+        1904,
+        -400
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -150,51 +101,41 @@
       "parameters": {
         "jsCode": "// Aggregate results\nconst items = $input.all();\nconst itemsCreated = items.map(item => item.json.id || item.json.item_id);\n\n// Get retailer name from Match Retailer node\nconst retailerName = $('Match Retailer').item.json.retailer_name;\n\nreturn {\n  json: {\n    items_created: itemsCreated,\n    retailer_matched: retailerName,\n    items_count: itemsCreated.length,\n    errors: []\n  }\n};"
       },
-      "id": "bd814727-1e6a-4b43-86cd-76c2ab05de26",
+      "id": "e5ffbcad-9050-41eb-8fbf-f8d821f9eedb",
       "name": "Aggregate Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1872,
-        240
+        2128,
+        -400
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {}
-      },
-      "id": "83d1457c-70d4-48b8-b7a9-71cbbec1140f",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        2096,
-        240
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "image",
-        "operation": "analyze",
         "modelId": {
           "__rl": true,
           "value": "chatgpt-4o-latest",
           "mode": "list",
           "cachedResultName": "CHATGPT-4O-LATEST"
         },
-        "text": "Extract all text and data from this invoice image. Return the following information in JSON format:\n{\n  \"retailer_name\": \"name of the store/retailer\",\n  \"purchase_date\": \"date of purchase in YYYY-MM-DD format\",\n  \"order_number\": \"order or invoice number if present\",\n  \"total_amount\": \"total amount as a number\",\n  \"items\": [\n    {\n      \"name\": \"item name\",\n      \"price\": \"item price as a number\",\n      \"quantity\": \"quantity as a number\"\n    }\n  ]\n}\n\nBe precise with the data extraction. If a field is not found, use null.",
-        "inputType": "base64",
+        "responses": {
+          "values": [
+            {
+              "type": "image",
+              "imageType": "base64"
+            }
+          ]
+        },
+        "builtInTools": {},
         "options": {}
       },
-      "id": "4e71adf4-f3a9-4127-ba5f-288caf6c5e02",
+      "id": "d9c8e8f4-4092-4c56-ad73-192d9f7e7813",
       "name": "Extract Invoice Data with AI",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        528,
-        240
+        592,
+        -304
       ],
       "credentials": {
         "openAiApi": {
@@ -209,50 +150,147 @@
         "include": "allOtherFields",
         "options": {}
       },
-      "id": "d179ef40-5595-4bd9-acb2-8e65ba240bf9",
+      "id": "98c42dee-c8f5-4a8b-b92c-86a77fc40843",
       "name": "Split Items",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1424,
-        240
+        1680,
+        -400
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI/Mistral response and extract JSON\nconst input = $input.item.json;\nlet invoiceData;\n\ntry {\n  let content;\n  \n  // Handle different AI response formats\n  if (input.choices && input.choices[0] && input.choices[0].message) {\n    // OpenAI format\n    content = input.choices[0].message.content;\n  } else if (input.extractedText) {\n    // Mistral OCR format\n    content = input.extractedText;\n  } else if (input.message && input.message.content) {\n    content = input.message.content;\n  } else if (input.content) {\n    content = input.content;\n  } else if (typeof input === 'string') {\n    content = input;\n  } else {\n    content = JSON.stringify(input);\n  }\n  \n  // Extract JSON from content (handle markdown code blocks)\n  const jsonMatch = content.match(/```(?:json)?\\s*([\\s\\S]*?)```/) || content.match(/\\{[\\s\\S]*\\}/);\n  \n  if (jsonMatch) {\n    const jsonString = jsonMatch[1] || jsonMatch[0];\n    invoiceData = JSON.parse(jsonString.trim());\n  } else {\n    invoiceData = JSON.parse(content);\n  }\n} catch (e) {\n  throw new Error(`Failed to parse invoice data: ${e.message}. Response: ${JSON.stringify(input)}`);\n}\n\n// Validate required fields\nif (!invoiceData.retailer_name) {\n  throw new Error('Retailer name not found in invoice');\n}\n\nif (!invoiceData.purchase_date) {\n  throw new Error('Purchase date not found in invoice');\n}\n\nif (!invoiceData.items || !Array.isArray(invoiceData.items) || invoiceData.items.length === 0) {\n  throw new Error('No items found in invoice');\n}\n\n// Ensure items have required fields\ninvoiceData.items = invoiceData.items.map(item => ({\n  name: item.name || 'Unnamed Item',\n  price: item.price || 0,\n  quantity: item.quantity || 1\n}));\n\nreturn {\n  json: {\n    retailer_name: invoiceData.retailer_name,\n    purchase_date: invoiceData.purchase_date,\n    order_number: invoiceData.order_number || null,\n    total_amount: invoiceData.total_amount || null,\n    items: invoiceData.items\n  }\n};"
+      },
+      "id": "parse-invoice-data-node-001",
+      "name": "Parse Invoice Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0fd4581-9d46-46c0-8b2f-6dcefab9c854",
+              "name": "RETORO_API_KEY",
+              "value": "299f5ca754fa16718420949736b75abb139ff5018f792a00c961b99a97716fa7",
+              "type": "string"
+            },
+            {
+              "id": "05cf9493-ddc9-47dd-8de8-520eeab97809",
+              "name": "RETORO_API_URL",
+              "value": "http://localhost:3000/api",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        -400
+      ],
+      "id": "d5198ad2-9421-4d20-8c4b-c2eb427591fd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-process",
+        "responseMode": "lastNode",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "4b10ece7-12f6-4e75-b4a7-27ce14c867e1",
+      "name": "Webhook Trigger1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -400
+      ],
+      "webhookId": "invoice-process"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "7a9d6b89-5444-4e68-a59a-c61bd33d9ebc",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "documentType": "image_url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -592
+      ],
+      "id": "bc6f6ed8-67e7-4a93-856c-7455e5baf77b",
+      "name": "Extract text",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "WZEuqlC6d4b4G4dV",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d065148f-7138-4761-b4d2-27f92dd1d502",
+              "leftValue": "={{ $('Webhook Trigger1').item.binary.data.mimeType }}",
+              "rightValue": "image/",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        -416
+      ],
+      "id": "a6fbca3c-3d76-4ca3-9891-9ba69c1fb1a8",
+      "name": "If"
     }
   ],
   "connections": {
-    "Webhook Trigger": {
-      "main": [
-        [
-          {
-            "node": "Download Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Download Image": {
-      "main": [
-        [
-          {
-            "node": "Extract Invoice Data with AI",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse Invoice Data": {
-      "main": [
-        [
-          {
-            "node": "Search Retailer",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Search Retailer": {
       "main": [
         [
@@ -279,11 +317,6 @@
       "main": [
         [
           {
-            "node": "Split Items",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Aggregate Results",
             "type": "main",
             "index": 0
@@ -295,7 +328,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Respond to Webhook1",
             "type": "main",
             "index": 0
           }
@@ -313,6 +346,17 @@
         ]
       ]
     },
+    "Parse Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Split Items": {
       "main": [
         [
@@ -323,10 +367,87 @@
           }
         ]
       ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Search Retailer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "Parse Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract Invoice Data with AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
+  "pinData": {
+    "Extract text": [
+      {
+        "pages": [
+          {
+            "index": 0,
+            "markdown": "Dear mypen.ge!\n\nPayment using Visa/MC with Flitt service in https://mypen.ge store was successfully paid.\n\nPayment info:\n\n|  |   |\n| --- | --- |\n|  Shop web-site: | https://mypen.ge  |\n|  Flitt transaction id: | 955593282  |\n|  Shop order ID: | 44fb0e98-3363-4efa-ba03-2b3678628576  |\n|  Client email: | dididze@gmail.com  |\n|  ь옹고ᇰ: | Mypen PRO Subscription  |\n|  Card/account number: | 5*** **** **** **29  |\n|  Payment amount: | 29.0 GEL  |\n|  Payment creation date: | 26.11.2025 09:46 GMT (Greenwich timezone)  |\n|  Authorization code: | 657231  |\n\nTo get information about this and other of your payments or print receipt please visit your Flitt personal account by link:\n\nLogin merchant portal\n\nIf you have questions relating to payments, you can contact customer support Flitt:",
+            "images": [],
+            "dimensions": {
+              "dpi": 200,
+              "height": 782,
+              "width": 555
+            }
+          }
+        ],
+        "model": "mistral-ocr-2505-completion",
+        "document_annotation": null,
+        "usage_info": {
+          "pages_processed": 1,
+          "doc_size_bytes": 85024
+        },
+        "extractedText": "Dear mypen.ge!\n\nPayment using Visa/MC with Flitt service in https://mypen.ge store was successfully paid.\n\nPayment info:\n\n|  |   |\n| --- | --- |\n|  Shop web-site: | https://mypen.ge  |\n|  Flitt transaction id: | 955593282  |\n|  Shop order ID: | 44fb0e98-3363-4efa-ba03-2b3678628576  |\n|  Client email: | dididze@gmail.com  |\n|  ь옹고ᇰ: | Mypen PRO Subscription  |\n|  Card/account number: | 5*** **** **** **29  |\n|  Payment amount: | 29.0 GEL  |\n|  Payment creation date: | 26.11.2025 09:46 GMT (Greenwich timezone)  |\n|  Authorization code: | 657231  |\n\nTo get information about this and other of your payments or print receipt please visit your Flitt personal account by link:\n\nLogin merchant portal\n\nIf you have questions relating to payments, you can contact customer support Flitt:",
+        "pageCount": 1
+      }
+    ]
+  },
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "c0320382499acc1816c05e1130ede806d6731eecdef3b30ac30aabf4236c8764"
   }
 }
