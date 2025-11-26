@@ -53,7 +53,6 @@ export default function RegistrationModal({
           anonymous_user_id: anonymousUserId,
         })
         
-        toast.success("Check your email for the magic link!")
         onOpenChange(false)
       } else {
         // Email + password registration
@@ -64,7 +63,6 @@ export default function RegistrationModal({
           anonymous_user_id: anonymousUserId,
         })
         
-        toast.success("Account created! Please check your email to verify.")
         onOpenChange(false)
         router.refresh()
       }

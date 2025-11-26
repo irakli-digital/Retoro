@@ -11,10 +11,30 @@ N8N is used to offload heavy processing tasks from the website, keeping the appl
 Set these in your N8N instance:
 
 - `PERPLEXITY_API_KEY` - For AI-powered search and data extraction
-- `GOOGLE_VISION_API_KEY` - For OCR (invoice image text extraction)
+- `GOOGLE_VISION_API_KEY` - For OCR (invoice image text extraction) - Optional if using OpenAI Vision
 - `OPENAI_API_KEY` - For AI parsing of invoice data (or use Claude)
 - `RETORO_API_URL` - Base URL of Retoro API (e.g., `https://retoro.app/api` or `http://localhost:3000/api`)
-- `RETORO_API_KEY` - API key for authenticating N8N requests to Retoro
+- `RETORO_API_KEY` - API key for authenticating N8N requests to Retoro (must match the value in your `.env.local` file)
+
+### Setting RETORO_API_KEY in N8N
+
+1. **Generate a secure API key** (if not already set):
+   ```bash
+   # Generate a random 64-character hex string
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+2. **Add to your Retoro `.env.local` file**:
+   ```bash
+   RETORO_API_KEY=your_generated_api_key_here
+   ```
+
+3. **Set the same value in N8N**:
+   - Go to N8N Settings → Environment Variables
+   - Add: `RETORO_API_KEY` = `your_generated_api_key_here` (same value as in `.env.local`)
+   - Or set it in your N8N deployment environment variables
+
+**Important:** The `RETORO_API_KEY` value in N8N must **exactly match** the value in your Retoro `.env.local` file (or production environment variables).
 
 ## Flows
 

@@ -36,7 +36,6 @@ export default function SettingsPage() {
     setLoggingOut(true)
     try {
       await axios.post("/api/auth/logout")
-      toast.success("Signed out successfully")
       
       // Redirect to home page and refresh to clear server-side session
       router.push("/")

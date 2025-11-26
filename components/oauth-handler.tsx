@@ -17,9 +17,6 @@ export default function OAuthHandler() {
     const oauthError = searchParams.get("error")
 
     if (oauthSuccess === "true") {
-      // Show success message
-      toast.success("Successfully signed in with Google!")
-      
       // Remove query params and refresh to ensure cookie is read
       setTimeout(() => {
         router.replace("/")

@@ -37,7 +37,6 @@ export default function ReturnItemActions({ itemId }: ReturnItemActionsProps) {
         user_id: userId,
       })
       
-      toast.success("Item marked as returned!")
       router.push("/")
       router.refresh()
     } catch (error) {
@@ -57,7 +56,6 @@ export default function ReturnItemActions({ itemId }: ReturnItemActionsProps) {
         user_id: userId,
       })
       
-      toast.success("Item marked as kept")
       router.push("/")
       router.refresh()
     } catch (error) {
@@ -74,7 +72,6 @@ export default function ReturnItemActions({ itemId }: ReturnItemActionsProps) {
       const userId = getUserIdClient();
       await axios.delete(`/api/return-items/${itemId}?user_id=${userId}`)
       
-      toast.success("Item deleted")
       router.push("/")
       router.refresh()
     } catch (error) {

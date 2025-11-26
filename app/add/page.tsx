@@ -149,8 +149,6 @@ export default function AddPurchasePage() {
         has_free_returns: false,
       })
       setShowAddRetailerDialog(false)
-      
-      toast.success("Retailer added successfully!")
     } catch (error: any) {
       console.error("Error adding retailer:", error)
       if (error.response?.status === 409) {
@@ -192,7 +190,6 @@ export default function AddPurchasePage() {
       })
 
       if (response.data) {
-        toast.success("Purchase added successfully!")
         router.push("/")
       }
     } catch (error: any) {
@@ -403,8 +400,13 @@ export default function AddPurchasePage() {
           {/* Submit Button */}
           <Button
             type="submit"
-            variant="shopify"
-            className="w-full ios-rounded h-12 mt-6"
+            variant={formData.retailerId ? "default" : "ghost"}
+            className={cn(
+              "w-full ios-rounded h-12 mt-6 transition-all duration-200",
+              formData.retailerId 
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" 
+                : "bg-transparent text-muted-foreground opacity-50 border-0 hover:bg-transparent"
+            )}
             disabled={submitting || !formData.retailerId}
             size="lg"
           >
