@@ -263,12 +263,12 @@ export default function AddPurchasePage() {
               <div className="flex flex-col items-center justify-center gap-4">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <ImageIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">Or upload invoice screenshot</span>
+                  <span className="text-sm font-medium">Or upload invoice (image, PDF, or document)</span>
                 </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={handleFileChange}
                   className="hidden"
                   disabled={uploadingInvoice}

@@ -59,10 +59,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
+    // Validate file type - accept images, PDFs, and common document formats
+    const allowedTypes = [
+      "image/", // All image types (jpeg, png, gif, webp, etc.)
+      "application/pdf", // PDF files
+      "application/msword", // .doc
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    ];
+    
+    const isValidType = allowedTypes.some(type => file.type.startsWith(type) || file.type === type);
+    
+    if (!isValidType) {
       return NextResponse.json(
-        { error: "File must be an image" },
+        { error: "File must be an image, PDF, or document (PDF, DOC, DOCX)" },
         { status: 400 }
       );
     }
@@ -107,26 +116,35 @@ export async function POST(request: NextRequest) {
       fileType: file.type,
     });
 
-    // Call n8n webhook with binary image data
-    // n8n webhook with binaryData: true can receive raw binary with metadata in headers
-    // Or we can use multipart/form-data
-    const webhookUrl = new URL(n8nWebhookUrl);
-    webhookUrl.searchParams.append("user_id", user_id);
-    webhookUrl.searchParams.append("job_id", jobId);
-    webhookUrl.searchParams.append("mimeType", file.type);
+    // Call n8n webhook with binary file data (image, PDF, or document)
+    // n8n webhook with binaryData: true expects the binary data in the body
+    // Pass metadata via headers
+    console.log("[Invoice Upload] Sending binary data:", {
+      contentType: file.type,
+      fileName: file.name,
+      bufferLength: buffer.length,
+      bufferType: Buffer.isBuffer(buffer) ? "Buffer" : typeof buffer,
+      fileType: file.type.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "document",
+    });
 
     let n8nResponse;
     try {
-      n8nResponse = await fetch(webhookUrl.toString(), {
+      n8nResponse = await fetch(n8nWebhookUrl, {
         method: "POST",
         headers: {
-          "Content-Type": file.type,
+          "Content-Type": file.type, // Set image content type (e.g., image/jpeg, image/png)
           "X-User-Id": user_id,
           "X-Job-Id": jobId,
+          "X-Mime-Type": file.type,
         },
-        body: buffer, // Send raw binary data
+        body: buffer, // Send raw binary image data (Buffer)
         // Add timeout to prevent hanging
         signal: AbortSignal.timeout(60000), // 60 second timeout
+      });
+      
+      console.log("[Invoice Upload] Request sent, response headers:", {
+        contentType: n8nResponse.headers.get("content-type"),
+        status: n8nResponse.status,
       });
     } catch (fetchError: any) {
       console.error("[Invoice Upload] Fetch error:", {
