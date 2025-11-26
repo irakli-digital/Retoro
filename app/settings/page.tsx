@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import AppHeader from "@/components/app-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -17,14 +18,36 @@ import {
   ChevronRight,
   Moon,
   Sun,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
+import axios from "axios"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [notifications, setNotifications] = useState(true)
   const [emailReminders, setEmailReminders] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    setLoggingOut(true)
+    try {
+      await axios.post("/api/auth/logout")
+      toast.success("Signed out successfully")
+      
+      // Redirect to home page and refresh to clear server-side session
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      console.error("Error signing out:", error)
+      toast.error("Failed to sign out. Please try again.")
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col pb-[60px] md:pb-0">
@@ -193,13 +216,20 @@ export default function SettingsPage() {
           <Button
             variant="destructive"
             className="w-full ios-rounded"
-            onClick={() => {
-              // TODO: Implement sign out
-              console.log("Sign out")
-            }}
+            onClick={handleSignOut}
+            disabled={loggingOut}
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
+            {loggingOut ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing out...
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </>
+            )}
           </Button>
         </div>
       </main>
