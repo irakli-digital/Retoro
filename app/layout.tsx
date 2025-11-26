@@ -12,10 +12,10 @@ import SessionProvider from "@/components/session-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Mypen.ge - ᲓᲐᲖᲝᲒᲔ ᲓᲠᲝ. ᲬᲔᲠᲔ ᲣᲙᲔᲗᲔᲡᲐᲓ",
-  description: "ყველა საბაზისო ინსტრუმენტი AI-სთან მუშაობის დასაწყებად.",
+  title: "Retoro - Return Tracker",
+  description: "Track your purchases and never miss a return deadline again",
   icons: {
-    icon: "/images/favicon.svg",
+    icon: "/images/retoro-logo-light.svg",
   },
   generator: "v0.dev",
   metadataBase: new URL('https://mypen.ge'),

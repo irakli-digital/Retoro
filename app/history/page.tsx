@@ -5,7 +5,7 @@ import AppHeader from "@/components/app-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, DollarSign, Package } from "lucide-react";
+import { CheckCircle2, XCircle, DollarSign, Package, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -119,43 +119,48 @@ function HistoryItemCard({ item }: { item: any }) {
   const retailer = item.retailer;
 
   return (
-    <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-base mb-1">
-              {item.name || "Unnamed Item"}
-            </CardTitle>
-            <CardDescription className="flex items-center gap-2">
-              {retailer && <span>{retailer.name}</span>}
-            </CardDescription>
+    <Link href={`/items/${item.id}`}>
+      <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight cursor-pointer group">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0 pr-3">
+              <CardTitle className="text-base mb-1">
+                {item.name || "Unnamed Item"}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-2">
+                {retailer && <span>{retailer.name}</span>}
+              </CardDescription>
+            </div>
+            <Badge variant={item.is_returned ? "default" : "secondary"} className="shrink-0">
+              {item.is_returned ? (
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+              ) : (
+                <XCircle className="h-3 w-3 mr-1" />
+              )}
+              {item.is_returned ? "Returned" : "Kept"}
+            </Badge>
           </div>
-          <Badge variant={item.is_returned ? "default" : "secondary"}>
-            {item.is_returned ? (
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-            ) : (
-              <XCircle className="h-3 w-3 mr-1" />
-            )}
-            {item.is_returned ? "Returned" : "Kept"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between text-sm">
-          <div className="text-muted-foreground">
-            Purchased: {format(new Date(item.purchase_date), "MMM d, yyyy")}
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between text-sm">
+            <div className="text-muted-foreground">
+              Purchased: {format(new Date(item.purchase_date), "MMM d, yyyy")}
+            </div>
+            <div className="flex items-center gap-2">
+              {item.price && (
+                <div className="font-semibold">${Number(item.price).toFixed(2)}</div>
+              )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
           </div>
-          {item.price && (
-            <div className="font-semibold">${Number(item.price).toFixed(2)}</div>
+          {item.is_returned && item.returned_date && (
+            <div className="text-sm text-muted-foreground mt-2">
+              Returned: {format(new Date(item.returned_date), "MMM d, yyyy")}
+            </div>
           )}
-        </div>
-        {item.is_returned && item.returned_date && (
-          <div className="text-sm text-muted-foreground mt-2">
-            Returned: {format(new Date(item.returned_date), "MMM d, yyyy")}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

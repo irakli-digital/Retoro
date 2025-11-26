@@ -1,20 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { useTheme } from "next-themes"
+import Logo from "@/components/logo"
 
 export default function Footer() {
-  const { theme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  // Determine if we should show the dark logo
-  const isDarkTheme = !mounted ? true : theme === "dark" || resolvedTheme === "dark"
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   return (
     <footer className="w-full border-t bg-background/95 backdrop-blur-sm">
@@ -23,14 +12,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 font-bold">
               <Link href="/">
-                <Image
-                  src={isDarkTheme ? "/images/saasify-logo-dark.svg" : "/images/saasify-logo-light.svg"}
-                  alt="SaaSify Logo"
-                  width={150}
-                  height={35}
-                  className="h-auto max-w-[150px]"
-                  priority
-                />
+                <Logo width={150} height={35} className="max-w-[150px]" priority />
               </Link>
             </div>
             <p className="text-sm text-muted-foreground">

@@ -90,7 +90,7 @@ export default function AppTabBar() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
         {/* Safe area spacer for iPhone home indicator */}
         <div className="bg-background ios-blur border-t border-border safe-bottom">
-        <div className="flex h-[49px] items-center justify-around px-2">
+        <div className="flex h-[49px] items-center justify-around px-1">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href || (tab.href === "/" && pathname === "/")
             const Icon = tab.icon
@@ -100,7 +100,7 @@ export default function AppTabBar() {
                 key={tab.name}
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-all duration-200 ios-tap-highlight ios-touch-target",
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-all duration-200 ios-tap-highlight ios-touch-target",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground active:opacity-70"
@@ -108,12 +108,12 @@ export default function AppTabBar() {
               >
                 <div className="relative">
                   <Icon className={cn(
-                    "h-5 w-5 transition-transform duration-200",
-                    isActive && "scale-110"
+                    "h-6 w-6 transition-transform duration-200",
+                    isActive && "scale-105"
                   )} />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium leading-none transition-colors duration-200",
+                  "text-[10px] font-medium leading-tight transition-colors duration-200",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                   {tab.name}

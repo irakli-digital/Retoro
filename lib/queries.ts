@@ -164,6 +164,48 @@ export async function getRetailerPolicy(retailerId: string): Promise<RetailerPol
   return (result[0] as RetailerPolicy) || null;
 }
 
+export async function updateRetailerPolicy(
+  retailerId: string,
+  updates: Partial<Pick<RetailerPolicy, 'return_window_days' | 'has_free_returns' | 'policy_description' | 'website_url'>>
+): Promise<RetailerPolicy> {
+  const updateParts: any[] = [];
+  
+  if (updates.return_window_days !== undefined) {
+    updateParts.push(sql`return_window_days = ${updates.return_window_days}`);
+  }
+  if (updates.has_free_returns !== undefined) {
+    updateParts.push(sql`has_free_returns = ${updates.has_free_returns}`);
+  }
+  if (updates.policy_description !== undefined) {
+    updateParts.push(sql`policy_description = ${updates.policy_description}`);
+  }
+  if (updates.website_url !== undefined) {
+    updateParts.push(sql`website_url = ${updates.website_url}`);
+  }
+
+  if (updateParts.length === 0) {
+    // No updates, return existing
+    const existing = await getRetailerPolicy(retailerId);
+    if (!existing) {
+      throw new Error('Retailer not found');
+    }
+    return existing;
+  }
+  
+  const result = await sql`
+    UPDATE retailer_policies
+    SET ${sql.join(updateParts, sql`, `)}
+    WHERE id = ${retailerId}
+    RETURNING *
+  `;
+  
+  if (result.length === 0) {
+    throw new Error('Retailer not found');
+  }
+  
+  return result[0] as RetailerPolicy;
+}
+
 export async function getReturnItemById(itemId: string): Promise<ReturnItemWithRetailer | null> {
   const result = await sql`
     SELECT 

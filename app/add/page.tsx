@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { CalendarIcon, Loader2, Plus, ExternalLink, Search, X } from "lucide-react"
+import { CalendarIcon, Loader2, Plus, ExternalLink, Search, X, Upload, Image as ImageIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import axios from "axios"
@@ -38,6 +38,9 @@ export default function AddPurchasePage() {
   const [retailers, setRetailers] = useState<RetailerPolicy[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingInvoice, setUploadingInvoice] = useState(false)
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [formData, setFormData] = useState({
     retailerId: "",
@@ -210,6 +213,52 @@ export default function AddPurchasePage() {
       />
       
       <main className="flex-1 container mx-auto px-4 py-6">
+        {/* Invoice Upload Option */}
+        <div className="max-w-2xl mx-auto mb-6">
+          <Card className="ios-rounded border-dashed">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <ImageIcon className="h-5 w-5" />
+                  <span className="text-sm font-medium">Or upload invoice screenshot</span>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={uploadingInvoice}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="ios-rounded"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingInvoice}
+                >
+                  {uploadingInvoice ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Invoice
+                    </>
+                  )}
+                </Button>
+                {invoiceFile && (
+                  <p className="text-xs text-muted-foreground">
+                    {invoiceFile.name}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
           {/* Retailer Selection - Live Search */}
           <div className="space-y-2 relative">

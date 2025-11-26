@@ -2,9 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllRetailerPolicies } from "@/lib/queries";
 import { neon } from "@neondatabase/serverless";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const retailers = await getAllRetailerPolicies();
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search");
+    const name = searchParams.get("name");
+    
+    let retailers = await getAllRetailerPolicies();
+    
+    // If name parameter provided, do exact match (for e-commerce checker)
+    if (name) {
+      const matched = retailers.find(
+        (r) => r.name.toLowerCase() === name.toLowerCase()
+      );
+      return NextResponse.json(matched ? [matched] : []);
+    }
+    
+    // If search parameter provided, do fuzzy search (for invoice scraper)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      const matched = retailers.filter((r) => {
+        const nameLower = r.name.toLowerCase();
+        // Exact match
+        if (nameLower === searchLower) return true;
+        // Contains match
+        if (nameLower.includes(searchLower) || searchLower.includes(nameLower)) return true;
+        // Word boundary match (e.g., "amazon" matches "Amazon.com")
+        const nameWords = nameLower.split(/[\s\-\.]+/);
+        const searchWords = searchLower.split(/[\s\-\.]+/);
+        return nameWords.some(word => searchWords.includes(word)) ||
+               searchWords.some(word => nameWords.includes(word));
+      });
+      return NextResponse.json(matched);
+    }
+    
+    // Return all retailers if no search/filter
     return NextResponse.json(retailers);
   } catch (error) {
     console.error("Error fetching retailers:", error);

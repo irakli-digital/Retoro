@@ -1,0 +1,238 @@
+{
+  "name": "Retoro - Invoice Image Scraper",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "invoice-process"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "download-image",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "detectText",
+        "binaryPropertyName": "data"
+      },
+      "id": "ocr-extract",
+      "name": "OCR Extract Text",
+      "type": "n8n-nodes-base.googleCloudVision",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "googleCloudVisionOAuth2Api": {
+          "id": "google-vision-credentials",
+          "name": "Google Vision API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert at parsing invoice/receipt data. Extract structured information from the OCR text. Return ONLY valid JSON."
+            },
+            {
+              "role": "user",
+              "content": "Parse this invoice/receipt text and extract:\n- retailer_name (string, name of store/retailer)\n- purchase_date (string, ISO format YYYY-MM-DD)\n- order_number (string, optional)\n- total_amount (number, optional)\n- items (array of objects, each with: name, price, quantity)\n\nOCR Text:\n{{ $json.textAnnotations[0].description }}\n\nReturn JSON format:\n{\n  \"retailer_name\": \"Amazon\",\n  \"purchase_date\": \"2025-11-26\",\n  \"order_number\": \"123-4567890\",\n  \"total_amount\": 99.99,\n  \"items\": [\n    {\"name\": \"Product Name\", \"price\": 49.99, \"quantity\": 1},\n    {\"name\": \"Another Product\", \"price\": 49.99, \"quantity\": 1}\n  ]\n}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "parse-invoice-ai",
+      "name": "Parse Invoice with AI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.3,
+      "position": [850, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response and extract JSON\nconst response = $input.item.json;\nlet invoiceData;\n\ntry {\n  // Try to extract JSON from response\n  const content = response.choices?.[0]?.message?.content || response.content || JSON.stringify(response);\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    invoiceData = JSON.parse(jsonMatch[0]);\n  } else {\n    invoiceData = JSON.parse(content);\n  }\n} catch (e) {\n  throw new Error(`Failed to parse invoice data: ${e.message}`);\n}\n\n// Validate required fields\nif (!invoiceData.retailer_name) {\n  throw new Error('Retailer name not found in invoice');\n}\n\nif (!invoiceData.purchase_date) {\n  throw new Error('Purchase date not found in invoice');\n}\n\nif (!invoiceData.items || !Array.isArray(invoiceData.items) || invoiceData.items.length === 0) {\n  throw new Error('No items found in invoice');\n}\n\n// Ensure items have required fields\ninvoiceData.items = invoiceData.items.map(item => ({\n  name: item.name || 'Unnamed Item',\n  price: item.price || 0,\n  quantity: item.quantity || 1\n}));\n\nreturn {\n  json: {\n    retailer_name: invoiceData.retailer_name,\n    purchase_date: invoiceData.purchase_date,\n    order_number: invoiceData.order_number || null,\n    total_amount: invoiceData.total_amount || null,\n    items: invoiceData.items,\n    user_id: $input.item.json.body?.user_id || $('Webhook Trigger').item.json.body.user_id\n  }\n};"
+      },
+      "id": "parse-invoice-data",
+      "name": "Parse Invoice Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RETORO_API_URL }}/retailers?search={{ encodeURIComponent($json.retailer_name) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.RETORO_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "search-retailer",
+      "name": "Search Retailer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Match retailer from search results\nconst searchResults = $input.item.json;\nconst invoiceRetailerName = $('Parse Invoice Data').item.json.retailer_name.toLowerCase();\n\nlet matchedRetailer = null;\n\nif (searchResults && searchResults.length > 0) {\n  // Try exact match first\n  matchedRetailer = searchResults.find(r => r.name.toLowerCase() === invoiceRetailerName);\n  \n  // Try fuzzy match\n  if (!matchedRetailer) {\n    matchedRetailer = searchResults.find(r => \n      r.name.toLowerCase().includes(invoiceRetailerName) || \n      invoiceRetailerName.includes(r.name.toLowerCase())\n    );\n  }\n  \n  // Take first result if no match\n  if (!matchedRetailer && searchResults.length > 0) {\n    matchedRetailer = searchResults[0];\n  }\n}\n\nif (!matchedRetailer) {\n  throw new Error(`Retailer '${invoiceRetailerName}' not found in database`);\n}\n\nreturn {\n  json: {\n    retailer_id: matchedRetailer.id,\n    retailer_name: matchedRetailer.name,\n    ...$('Parse Invoice Data').item.json\n  }\n};"
+      },
+      "id": "match-retailer",
+      "name": "Match Retailer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-items",
+      "name": "Split Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RETORO_API_URL }}/return-items",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "retailer_id",
+              "value": "={{ $('Match Retailer').item.json.retailer_id }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $json.price }}"
+            },
+            {
+              "name": "purchase_date",
+              "value": "={{ $('Match Retailer').item.json.purchase_date }}"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.RETORO_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "create-return-item",
+      "name": "Create Return Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate results\nconst items = $input.all();\nconst itemsCreated = items.map(item => item.json.id || item.json.item_id);\nconst firstItem = items[0];\n\nreturn {\n  json: {\n    items_created: itemsCreated,\n    retailer_matched: firstItem.json.retailer_name,\n    items_count: itemsCreated.length,\n    errors: []\n  }\n};"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Download Image", "type": "main", "index": 0 }]]
+    },
+    "Download Image": {
+      "main": [[{ "node": "OCR Extract Text", "type": "main", "index": 0 }]]
+    },
+    "OCR Extract Text": {
+      "main": [[{ "node": "Parse Invoice with AI", "type": "main", "index": 0 }]]
+    },
+    "Parse Invoice with AI": {
+      "main": [[{ "node": "Parse Invoice Data", "type": "main", "index": 0 }]]
+    },
+    "Parse Invoice Data": {
+      "main": [[{ "node": "Search Retailer", "type": "main", "index": 0 }]]
+    },
+    "Search Retailer": {
+      "main": [[{ "node": "Match Retailer", "type": "main", "index": 0 }]]
+    },
+    "Match Retailer": {
+      "main": [[{ "node": "Split Items", "type": "main", "index": 0 }]]
+    },
+    "Split Items": {
+      "main": [[{ "node": "Create Return Item", "type": "main", "index": 0 }]]
+    },
+    "Create Return Item": {
+      "main": [[{ "node": "Split Items", "type": "main", "index": 0 }, { "node": "Aggregate Results", "type": "main", "index": 0 }]]
+    },
+    "Aggregate Results": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-26T00:00:00.000Z",
+  "versionId": "1"
+}
+

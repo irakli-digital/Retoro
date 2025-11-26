@@ -16,7 +16,7 @@ const buttonVariants = cva(
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground ios-rounded",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 ios-rounded shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground rounded-lg",
+        ghost: "hover:bg-accent hover:text-accent-foreground ios-rounded",
         link: "text-primary underline-offset-4 hover:underline",
         ios: "bg-primary text-primary-foreground hover:bg-primary/90 ios-rounded-lg shadow-sm font-semibold",
         shopify: "bg-shopify-purple text-white hover:bg-shopify-purple/90 ios-rounded shadow-sm font-semibold",
@@ -25,7 +25,7 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2 ios-rounded",
         sm: "h-9 ios-rounded px-3",
         lg: "h-12 ios-rounded-lg px-8 text-base",
-        icon: "h-10 w-10 rounded-lg",
+        icon: "h-10 w-10 ios-rounded",
       },
     },
     defaultVariants: {

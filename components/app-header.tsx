@@ -1,9 +1,11 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
+import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import Logo from "@/components/logo"
 
 interface AppHeaderProps {
   title: string
@@ -23,6 +25,8 @@ export default function AppHeader({
   className,
 }: AppHeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const isHomePage = pathname === "/"
 
   const handleBack = () => {
     if (backHref) {
@@ -56,15 +60,23 @@ export default function AppHeader({
           )}
         </div>
 
-        {/* Center - Title */}
-        <h1
-          className={cn(
-            "flex-1 text-center font-semibold",
-            largeTitle ? "text-xl" : "text-base"
+        {/* Center - Logo on home page, Title on other pages */}
+        <div className="flex-1 flex items-center justify-center">
+          {isHomePage ? (
+            <Link href="/" className="flex items-center">
+              <Logo width={100} height={24} className="h-6" />
+            </Link>
+          ) : (
+            <h1
+              className={cn(
+                "text-center font-semibold",
+                largeTitle ? "text-xl" : "text-base"
+              )}
+            >
+              {title}
+            </h1>
           )}
-        >
-          {title}
-        </h1>
+        </div>
 
         {/* Right side - Action button or spacer */}
         <div className="flex min-w-[44px] items-center justify-end">

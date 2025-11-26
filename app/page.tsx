@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { getActiveReturnItemsByUserId, getAllRetailerPolicies } from "@/lib/queries";
 import { getDaysRemaining, formatDaysRemaining, getUrgencyColor, getUrgencyBadgeVariant } from "@/lib/return-logic";
-import { getUserId } from "@/lib/auth-server";
+import { getUserId, getCurrentUser } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +20,10 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  // Get user ID from session
+  // Get user ID from session and check if user is authenticated
   const userId = await getUserId();
+  const currentUser = await getCurrentUser();
+  const isAuthenticated = currentUser !== null;
   
   // Fetch return items and retailer policies
   let returnItems = [];
@@ -56,8 +58,8 @@ export default async function DashboardPage() {
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          {/* Registration Banner */}
-          {returnItems.length > 0 && (
+          {/* Registration Banner - Only show for anonymous users */}
+          {!isAuthenticated && returnItems.length > 0 && (
             <div className="mb-6">
               <RegistrationBanner
                 itemCount={returnItems.length}

@@ -159,7 +159,7 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 88 50% 53%;
-    --radius: 0.5rem;
+    --radius: 1rem;
     /* Shopify Purple for CTAs */
     --shopify-purple: 250 100% 70%;
     /* Shopify Teal accent */
@@ -267,13 +267,17 @@ html body {
     background-color: rgba(0, 0, 0, 0.4);
   }
   
-  /* iOS-style rounded corners */
+  /* iOS-style rounded corners - More rounded for softer appearance */
   .ios-rounded {
-    border-radius: 10px;
+    border-radius: 16px;
   }
   
   .ios-rounded-lg {
-    border-radius: 12px;
+    border-radius: 20px;
+  }
+  
+  .ios-rounded-xl {
+    border-radius: 24px;
   }
   
   /* iOS-style shadows */

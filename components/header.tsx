@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { motion } from "framer-motion"
 import { Menu, X, Moon, Sun, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
+import Logo from "@/components/logo"
 
 interface HeaderProps {
   hideLoginButton?: boolean
@@ -20,7 +20,7 @@ export default function Header({ hideLoginButton = false, hideNavigation = false
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Determine if we should show the dark logo
+  // Determine if we should show the dark theme
   const isDarkTheme = !mounted ? true : theme === "dark" || resolvedTheme === "dark"
 
   useEffect(() => {
@@ -48,14 +48,7 @@ export default function Header({ hideLoginButton = false, hideNavigation = false
     >
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold">
-          <Image
-            src={isDarkTheme ? "/images/saasify-logo-dark.svg" : "/images/saasify-logo-light.svg"}
-            alt="SaaSify Logo"
-            width={150}
-            height={35}
-            className="h-auto max-w-[150px]"
-            priority
-          />
+          <Logo width={150} height={35} className="max-w-[150px]" priority />
         </Link>
         {!hideNavigation && (
           <nav className="hidden md:flex gap-8">

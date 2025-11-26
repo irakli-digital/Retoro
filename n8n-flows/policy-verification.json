@@ -1,0 +1,271 @@
+{
+  "name": "Retoro - Return Policy Verification",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "hours": {
+                "hours": 0
+              },
+              "minutes": {
+                "minutes": 0
+              }
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RETORO_API_URL }}/retailers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.RETORO_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-all-retailers",
+      "name": "Get All Retailers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-retailers",
+      "name": "Split Retailers",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-sonar-large-128k-online",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a helpful assistant that extracts return policy information from search results. Return ONLY valid JSON."
+            },
+            {
+              "role": "user",
+              "content": "Search for the latest return policy information for {{ $json.name }} (website: {{ $json.website_url || 'N/A' }}). Extract:\n- return_window_days (number, days from purchase)\n- has_free_returns (boolean)\n- policy_description (string, brief)\n- return_portal_url (string, URL to return portal if available)\n\nReturn JSON format:\n{\n  \"return_window_days\": 30,\n  \"has_free_returns\": true,\n  \"policy_description\": \"...\",\n  \"return_portal_url\": \"https://...\"\n}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "search-policy",
+      "name": "Search Latest Policy",
+      "type": "n8n-nodes-base.lmChatPerplexity",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "perplexityApi": {
+          "id": "perplexity-credentials",
+          "name": "Perplexity API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Perplexity response and compare with existing policy\nconst response = $input.item.json;\nconst existingRetailer = $('Split Retailers').item.json;\n\nlet newPolicyData;\n\ntry {\n  // Try to extract JSON from response\n  const content = response.content || JSON.stringify(response);\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    newPolicyData = JSON.parse(jsonMatch[0]);\n  } else {\n    newPolicyData = JSON.parse(content);\n  }\n} catch (e) {\n  // Skip if can't parse\n  return null;\n}\n\n// Validate\nif (!newPolicyData.return_window_days || newPolicyData.return_window_days < 0) {\n  return null;\n}\n\n// Compare with existing policy\nconst changes = [];\nconst hasChanges = \n  newPolicyData.return_window_days !== existingRetailer.return_window_days ||\n  newPolicyData.has_free_returns !== existingRetailer.has_free_returns;\n\nif (hasChanges) {\n  changes.push({\n    field: 'return_window_days',\n    old: existingRetailer.return_window_days,\n    new: newPolicyData.return_window_days\n  });\n  \n  if (newPolicyData.has_free_returns !== existingRetailer.has_free_returns) {\n    changes.push({\n      field: 'has_free_returns',\n      old: existingRetailer.has_free_returns,\n      new: newPolicyData.has_free_returns\n    });\n  }\n  \n  return {\n    json: {\n      retailer_id: existingRetailer.id,\n      retailer_name: existingRetailer.name,\n      old_policy: {\n        return_window_days: existingRetailer.return_window_days,\n        has_free_returns: existingRetailer.has_free_returns\n      },\n      new_policy: {\n        return_window_days: newPolicyData.return_window_days,\n        has_free_returns: newPolicyData.has_free_returns,\n        policy_description: newPolicyData.policy_description || existingRetailer.policy_description,\n        return_portal_url: newPolicyData.return_portal_url || existingRetailer.return_portal_url\n      },\n      changes: changes,\n      should_update: true\n    }\n  };\n}\n\nreturn null;"
+      },
+      "id": "compare-policies",
+      "name": "Compare Policies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json }}",
+              "rightValue": null,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-changes",
+      "name": "Has Changes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RETORO_API_URL }}/retailers/{{ $json.retailer_id }}",
+        "method": "PUT",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "return_window_days",
+              "value": "={{ $json.new_policy.return_window_days }}"
+            },
+            {
+              "name": "has_free_returns",
+              "value": "={{ $json.new_policy.has_free_returns }}"
+            },
+            {
+              "name": "policy_description",
+              "value": "={{ $json.new_policy.policy_description }}"
+            },
+            {
+              "name": "return_portal_url",
+              "value": "={{ $json.new_policy.return_portal_url }}"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.RETORO_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "update-retailer",
+      "name": "Update Retailer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format update result\nconst updateResult = $input.item.json;\nconst comparisonData = $('Compare Policies').item.json;\n\nreturn {\n  json: {\n    retailer_id: comparisonData.retailer_id,\n    retailer_name: comparisonData.retailer_name,\n    old_policy: comparisonData.old_policy,\n    new_policy: comparisonData.new_policy,\n    changes: comparisonData.changes,\n    updated: true\n  }\n};"
+      },
+      "id": "format-update",
+      "name": "Format Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all results\nconst allItems = $input.all();\nconst updates = allItems.filter(item => item.json && item.json.updated);\nconst checked = $('Split Retailers').item.json.length || allItems.length;\n\nreturn {\n  json: {\n    retailers_checked: checked,\n    policies_updated: updates.length,\n    changes: updates.map(u => ({\n      retailer_id: u.json.retailer_id,\n      retailer_name: u.json.retailer_name,\n      old_policy: u.json.old_policy,\n      new_policy: u.json.new_policy\n    })),\n    report: `Checked ${checked} retailers, updated ${updates.length} policies`\n  }\n};"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "policy-verification-log",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "retailers_checked": "={{ $json.retailers_checked }}",
+            "policies_updated": "={{ $json.policies_updated }}",
+            "report": "={{ $json.report }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-results",
+      "name": "Log Results",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2050, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets (optional)"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Get All Retailers", "type": "main", "index": 0 }]]
+    },
+    "Get All Retailers": {
+      "main": [[{ "node": "Split Retailers", "type": "main", "index": 0 }]]
+    },
+    "Split Retailers": {
+      "main": [[{ "node": "Search Latest Policy", "type": "main", "index": 0 }]]
+    },
+    "Search Latest Policy": {
+      "main": [[{ "node": "Compare Policies", "type": "main", "index": 0 }]]
+    },
+    "Compare Policies": {
+      "main": [[{ "node": "Has Changes?", "type": "main", "index": 0 }]]
+    },
+    "Has Changes?": {
+      "main": [
+        [
+          { "node": "Update Retailer", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Split Retailers", "type": "main", "index": 0 },
+          { "node": "Aggregate Results", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Update Retailer": {
+      "main": [[{ "node": "Format Update", "type": "main", "index": 0 }]]
+    },
+    "Format Update": {
+      "main": [[{ "node": "Split Retailers", "type": "main", "index": 0 }, { "node": "Aggregate Results", "type": "main", "index": 0 }]]
+    },
+    "Aggregate Results": {
+      "main": [[{ "node": "Log Results", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-26T00:00:00.000Z",
+  "versionId": "1"
+}
+

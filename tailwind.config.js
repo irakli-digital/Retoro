@@ -60,8 +60,9 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 0.25rem)",
         sm: "calc(var(--radius) - 0.5rem)",
-        ios: "10px",
-        "ios-lg": "12px",
+        ios: "16px",
+        "ios-lg": "20px",
+        "ios-xl": "24px",
       },
       spacing: {
         "safe-top": "env(safe-area-inset-top)",
