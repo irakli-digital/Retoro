@@ -60,19 +60,21 @@ export function CurrencyDisplay({
     return (
       <span className={className}>
         <Loader2 className="h-3 w-3 inline animate-spin mr-1" />
-        {formatCurrency(amount || 0, originalCurrency)}
+        {formatCurrency(amount ?? 0, originalCurrency)}
       </span>
     )
   }
 
   const displayAmount = convertedAmount ?? amount ?? 0
+  const numDisplayAmount = typeof displayAmount === 'number' ? displayAmount : parseFloat(String(displayAmount)) || 0
+  const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || 0)) || 0
 
   return (
     <span className={className}>
-      {formatCurrency(displayAmount, preferredCurrency)}
+      {formatCurrency(numDisplayAmount, preferredCurrency)}
       {showOriginal && originalCurrency !== preferredCurrency && (
         <span className="text-xs text-muted-foreground ml-1">
-          ({formatCurrency(amount || 0, originalCurrency)})
+          ({formatCurrency(numAmount, originalCurrency)})
         </span>
       )}
     </span>

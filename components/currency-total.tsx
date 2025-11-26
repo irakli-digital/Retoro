@@ -79,6 +79,7 @@ export function CurrencyTotal({ items, preferredCurrency, className = "" }: Curr
     )
   }
 
-  return <span className={className}>{formatCurrency(total || 0, preferredCurrency)}</span>
+  const numTotal = typeof total === 'number' ? total : parseFloat(String(total || 0)) || 0
+  return <span className={className}>{formatCurrency(numTotal, preferredCurrency)}</span>
 }
 

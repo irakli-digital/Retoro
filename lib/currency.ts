@@ -164,9 +164,10 @@ export async function getExchangeRate(
 /**
  * Format currency amount with symbol
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(amount: number | null | undefined, currency: string = 'USD'): string {
   const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] || currency.toUpperCase();
-  return `${symbol}${amount.toFixed(2)}`;
+  const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || 0)) || 0;
+  return `${symbol}${numAmount.toFixed(2)}`;
 }
 
 /**
