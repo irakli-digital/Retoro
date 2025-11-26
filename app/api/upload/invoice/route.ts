@@ -118,26 +118,30 @@ export async function POST(request: NextRequest) {
 
     // Call n8n webhook with binary file data (image, PDF, or document)
     // n8n webhook with binaryData: true expects the binary data in the body
-    // Pass metadata via headers
+    // Pass metadata via query parameters (accessible in n8n via $json.query)
+    const webhookUrl = new URL(n8nWebhookUrl);
+    webhookUrl.searchParams.append("user_id", user_id);
+    webhookUrl.searchParams.append("job_id", jobId);
+    webhookUrl.searchParams.append("mimeType", file.type);
+    
     console.log("[Invoice Upload] Sending binary data:", {
       contentType: file.type,
       fileName: file.name,
       bufferLength: buffer.length,
       bufferType: Buffer.isBuffer(buffer) ? "Buffer" : typeof buffer,
       fileType: file.type.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "document",
+      userId: user_id,
+      webhookUrl: webhookUrl.toString().substring(0, 100) + "...",
     });
 
     let n8nResponse;
     try {
-      n8nResponse = await fetch(n8nWebhookUrl, {
+      n8nResponse = await fetch(webhookUrl.toString(), {
         method: "POST",
         headers: {
-          "Content-Type": file.type, // Set image content type (e.g., image/jpeg, image/png)
-          "X-User-Id": user_id,
-          "X-Job-Id": jobId,
-          "X-Mime-Type": file.type,
+          "Content-Type": file.type, // Set file content type (e.g., image/jpeg, application/pdf)
         },
-        body: buffer, // Send raw binary image data (Buffer)
+        body: buffer, // Send raw binary file data (Buffer)
         // Add timeout to prevent hanging
         signal: AbortSignal.timeout(60000), // 60 second timeout
       });
