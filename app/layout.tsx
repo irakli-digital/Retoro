@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 // import AnnouncementBanner from "@/components/announcement-banner"
 import { BeforeInteractiveScripts, AfterInteractiveScripts, LazyScripts } from "@/components/ScriptInjector"
 import AppTabBar from "@/components/app-tab-bar"
+import { Toaster } from "sonner"
+import SessionProvider from "@/components/session-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -56,12 +58,15 @@ export default function RootLayout({
         {/* Scripts that load after page becomes interactive */}
         <AfterInteractiveScripts />
         
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <div className="flex min-h-screen flex-col">
-            {children}
-            {/* iOS-style tab bar - only shows on mobile and app pages */}
-            <AppTabBar />
-          </div>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <SessionProvider>
+            <div className="flex min-h-screen flex-col">
+              {children}
+              {/* iOS-style tab bar - only shows on mobile and app pages */}
+              <AppTabBar />
+            </div>
+            <Toaster position="top-center" richColors />
+          </SessionProvider>
         </ThemeProvider>
         
         {/* Scripts that load lazily when page is idle */}

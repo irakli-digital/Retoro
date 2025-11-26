@@ -15,6 +15,7 @@ import { CalendarIcon, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import axios from "axios"
+import { getUserIdClient } from "@/lib/auth-client"
 
 interface RetailerPolicy {
   id: string
@@ -82,13 +83,15 @@ export default function AddPurchasePage() {
         returnDeadline.setDate(returnDeadline.getDate() + retailer.return_window_days)
       }
 
+      const userId = getUserIdClient();
+      
       const response = await axios.post("/api/return-items", {
         retailer_id: formData.retailerId,
         name: formData.name || null,
         price: formData.price ? parseFloat(formData.price) : null,
         purchase_date: purchaseDate.toISOString(),
         return_deadline: returnDeadline.toISOString(),
-        user_id: "demo-user-123", // TODO: Replace with actual user ID
+        user_id: userId,
       })
 
       if (response.data) {

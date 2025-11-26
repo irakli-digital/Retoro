@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { getReturnItemsByUserId } from "@/lib/queries";
+import { getUserId } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,21 +14,19 @@ export const metadata: Metadata = {
   description: "View your return history and analytics",
 };
 
-// TODO: Replace with actual user ID from authentication
-const PLACEHOLDER_USER_ID = "demo-user-123";
-
 export default async function HistoryPage() {
+  const userId = await getUserId();
   let allItems = [];
   
   try {
-    allItems = await getReturnItemsByUserId(PLACEHOLDER_USER_ID);
+    allItems = await getReturnItemsByUserId(userId);
   } catch (error) {
     console.error("Error fetching history:", error);
   }
 
   const returnedItems = allItems.filter(item => item.is_returned);
   const keptItems = allItems.filter(item => !item.is_returned && new Date(item.return_deadline) < new Date());
-  const totalValueReturned = returnedItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  const totalValueReturned = returnedItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
   return (
     <div className="flex min-h-screen flex-col pb-[60px] md:pb-0">
@@ -120,7 +119,7 @@ function HistoryItemCard({ item }: { item: any }) {
   const retailer = item.retailer;
 
   return (
-    <Card className="ios-rounded ios-shadow">
+    <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -147,7 +146,7 @@ function HistoryItemCard({ item }: { item: any }) {
             Purchased: {format(new Date(item.purchase_date), "MMM d, yyyy")}
           </div>
           {item.price && (
-            <div className="font-semibold">${item.price.toFixed(2)}</div>
+            <div className="font-semibold">${Number(item.price).toFixed(2)}</div>
           )}
         </div>
         {item.is_returned && item.returned_date && (

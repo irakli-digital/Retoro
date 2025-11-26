@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { getActiveReturnItemsByUserId, getAllRetailerPolicies } from "@/lib/queries";
 import { getDaysRemaining, formatDaysRemaining, getUrgencyColor } from "@/lib/return-logic";
+import { getUserId } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,17 +16,17 @@ export const metadata: Metadata = {
   description: "Track your purchases and never miss a return deadline again",
 };
 
-// TODO: Replace with actual user ID from authentication
-const PLACEHOLDER_USER_ID = "demo-user-123";
-
 export default async function DashboardPage() {
+  // Get user ID from session
+  const userId = await getUserId();
+  
   // Fetch return items and retailer policies
   let returnItems = [];
   let retailers = [];
   
   try {
     [returnItems, retailers] = await Promise.all([
-      getActiveReturnItemsByUserId(PLACEHOLDER_USER_ID),
+      getActiveReturnItemsByUserId(userId),
       getAllRetailerPolicies(),
     ]);
   } catch (error) {
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
                 <CardHeader className="pb-2">
                   <CardDescription className="text-xs">Total Value</CardDescription>
                   <CardTitle className="text-xl">
-                    ${returnItems.reduce((sum, item) => sum + (item.price || 0), 0).toFixed(0)}
+                    ${returnItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0).toFixed(0)}
                   </CardTitle>
                 </CardHeader>
               </Card>
@@ -106,7 +107,7 @@ export default async function DashboardPage() {
                 const retailer = item.retailer;
 
                 return (
-                  <Card key={item.id} className="ios-rounded ios-shadow hover:shadow-lg transition-shadow">
+                  <Card key={item.id} className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -149,12 +150,12 @@ export default async function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      {item.price && (
-                        <div className="text-sm mb-4">
-                          <div className="text-xs text-muted-foreground mb-1">Price</div>
-                          <div className="font-semibold">${item.price.toFixed(2)}</div>
-                        </div>
-                      )}
+                        {item.price && (
+                          <div className="text-sm mb-4">
+                            <div className="text-xs text-muted-foreground mb-1">Price</div>
+                            <div className="font-semibold">${Number(item.price).toFixed(2)}</div>
+                          </div>
+                        )}
                       <div className="flex gap-2">
                         {retailer?.website_url && (
                           <Button variant="outline" size="sm" className="ios-rounded flex-1" asChild>

@@ -50,7 +50,7 @@ export default function AppTabBar() {
                 key={tab.name}
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-all duration-200",
+                  "flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-all duration-200 ios-tap-highlight ios-touch-target",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground active:opacity-70"

@@ -55,6 +55,22 @@ CREATE INDEX IF NOT EXISTS idx_faqs_category ON faqs(category, sort_order ASC);
 
 -- Return Tracker Tables
 
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255), -- NULL for passwordless/magic link
+  name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  last_login_at TIMESTAMP
+);
+
+-- Indexes for users
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Return Tracker Tables
+
 -- Retailer policies table
 CREATE TABLE IF NOT EXISTS retailer_policies (
   id VARCHAR(100) PRIMARY KEY,

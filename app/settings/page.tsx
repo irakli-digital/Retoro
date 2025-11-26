@@ -37,7 +37,7 @@ export default function SettingsPage() {
             <CardContent className="p-0">
               <Link
                 href="/settings/profile"
-                className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -58,7 +58,7 @@ export default function SettingsPage() {
             <h2 className="ios-section-header mb-2">Notifications</h2>
             <Card className="ios-rounded">
               <CardContent className="p-0">
-                <div className="flex items-center justify-between p-4 ios-separator">
+                <div className="flex items-center justify-between p-4 ios-separator ios-touch-target">
                   <div className="flex items-center gap-3">
                     <Bell className="h-5 w-5 text-muted-foreground" />
                     <Label htmlFor="notifications" className="font-normal cursor-pointer">
@@ -71,7 +71,7 @@ export default function SettingsPage() {
                     onCheckedChange={setNotifications}
                   />
                 </div>
-                <div className="flex items-center justify-between p-4">
+                <div className="flex items-center justify-between p-4 ios-touch-target">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-muted-foreground" />
                     <Label htmlFor="email-reminders" className="font-normal cursor-pointer">
@@ -121,7 +121,7 @@ export default function SettingsPage() {
               <CardContent className="p-0">
                 <Link
                   href="/settings/privacy"
-                  className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight ios-touch-target"
                 >
                   <div className="flex items-center gap-3">
                     <Shield className="h-5 w-5 text-muted-foreground" />
@@ -131,7 +131,7 @@ export default function SettingsPage() {
                 </Link>
                 <Link
                   href="/settings/data"
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight ios-touch-target"
                 >
                   <div className="flex items-center gap-3">
                     <Shield className="h-5 w-5 text-muted-foreground" />
@@ -150,7 +150,7 @@ export default function SettingsPage() {
               <CardContent className="p-0">
                 <Link
                   href="/faq"
-                  className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 ios-separator hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight ios-touch-target"
                 >
                   <div className="flex items-center gap-3">
                     <HelpCircle className="h-5 w-5 text-muted-foreground" />
@@ -160,7 +160,7 @@ export default function SettingsPage() {
                 </Link>
                 <Link
                   href="mailto:support@retoro.app"
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight ios-touch-target"
                 >
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-muted-foreground" />

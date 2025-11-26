@@ -216,6 +216,9 @@
     @apply bg-background text-foreground;
     /* iOS-style font stack */
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -228,6 +231,17 @@ html.dark {
 html.dark body {
   background-color: hsl(0, 0%, 9%) !important;
   color: hsl(300, 9%, 89%) !important;
+}
+
+/* Default to light mode */
+html {
+  background-color: hsl(0, 0%, 100%) !important;
+  color: hsl(0, 0%, 3.9%) !important;
+}
+
+html body {
+  background-color: hsl(0, 0%, 100%) !important;
+  color: hsl(0, 0%, 3.9%) !important;
 }
 
 /* iOS Design System Utilities */
@@ -298,5 +312,26 @@ html.dark body {
   /* iOS-style section header */
   .ios-section-header {
     @apply px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+  
+  /* iOS-style touch targets */
+  .ios-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* iOS-style tap highlight */
+  .ios-tap-highlight {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* iOS-style list group */
+  .ios-list-group {
+    @apply ios-rounded overflow-hidden border;
+  }
+  
+  /* iOS-style list item with separator */
+  .ios-list-item-separated {
+    @apply px-4 py-3 ios-separator last:border-b-0;
   }
 }

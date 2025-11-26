@@ -128,6 +128,35 @@ export async function getRetailerPolicy(retailerId: string): Promise<RetailerPol
   return (result[0] as RetailerPolicy) || null;
 }
 
+export async function getReturnItemById(itemId: string): Promise<ReturnItemWithRetailer | null> {
+  const result = await sql`
+    SELECT 
+      ri.*,
+      json_build_object(
+        'id', rp.id,
+        'name', rp.name,
+        'return_window_days', rp.return_window_days,
+        'policy_description', rp.policy_description,
+        'website_url', rp.website_url,
+        'has_free_returns', rp.has_free_returns,
+        'created_at', rp.created_at
+      ) as retailer
+    FROM return_items ri
+    LEFT JOIN retailer_policies rp ON ri.retailer_id = rp.id
+    WHERE ri.id = ${itemId}
+    LIMIT 1
+  `;
+  
+  if (result.length === 0) {
+    return null;
+  }
+  
+  return {
+    ...result[0],
+    retailer: result[0].retailer
+  } as ReturnItemWithRetailer;
+}
+
 export async function getReturnItemsByUserId(userId: string): Promise<ReturnItemWithRetailer[]> {
   const result = await sql`
     SELECT 
