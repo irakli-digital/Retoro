@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
       console.log(`[Retailers API] Search for "${search}": Found ${matched.length} matches`);
       if (matched.length > 0) {
         console.log(`[Retailers API] Matched retailers:`, matched.map(r => r.name).join(', '));
+      } else {
+        console.log(`[Retailers API] No matches found for "${search}". Available retailers:`, retailers.slice(0, 10).map(r => r.name).join(', '));
       }
+      // Return array (n8n will handle empty arrays if "Always Output Data" is enabled)
       return NextResponse.json(matched);
     }
     
