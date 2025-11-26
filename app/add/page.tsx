@@ -22,7 +22,7 @@ import { CalendarIcon, Loader2, Plus, ExternalLink, Search, X } from "lucide-rea
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import axios from "axios"
-import { getUserIdClient } from "@/lib/auth-client"
+// user_id is now handled server-side via session, no need to import getUserIdClient
 
 interface RetailerPolicy {
   id: string
@@ -165,39 +165,37 @@ export default function AddPurchasePage() {
     setSubmitting(true)
 
     try {
-      // Calculate deadline
       const purchaseDate = formData.purchaseDate
       const retailer = retailers.find(r => r.id === formData.retailerId)
       
       if (!retailer) {
-        alert("Please select a retailer")
+        toast.error("Please select a retailer")
+        setSubmitting(false)
         return
       }
 
-      const returnDeadline = new Date(purchaseDate)
-      if (retailer.return_window_days === 0) {
-        returnDeadline.setFullYear(returnDeadline.getFullYear() + 10)
-      } else {
-        returnDeadline.setDate(returnDeadline.getDate() + retailer.return_window_days)
+      if (!formData.retailerId) {
+        toast.error("Please select a retailer")
+        setSubmitting(false)
+        return
       }
 
-      const userId = getUserIdClient();
-      
+      // Note: user_id is now handled server-side via session
       const response = await axios.post("/api/return-items", {
         retailer_id: formData.retailerId,
         name: formData.name || null,
         price: formData.price ? parseFloat(formData.price) : null,
         purchase_date: purchaseDate.toISOString(),
-        return_deadline: returnDeadline.toISOString(),
-        user_id: userId,
       })
 
       if (response.data) {
+        toast.success("Purchase added successfully!")
         router.push("/")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding item:", error)
-      alert("Failed to add item. Please try again.")
+      const errorMessage = error.response?.data?.error || error.message || "Failed to add item. Please try again."
+      toast.error(errorMessage)
     } finally {
       setSubmitting(false)
     }
