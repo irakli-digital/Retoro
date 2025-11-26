@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllRetailerPolicies, getRetailerPolicy } from "@/lib/queries";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Webhook endpoint for N8N E-commerce Checker flow
  * This endpoint receives requests from N8N when checking if a retailer exists

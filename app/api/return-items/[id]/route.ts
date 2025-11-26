@@ -7,6 +7,8 @@ import {
 } from "@/lib/queries";
 import { calculateDeadline } from "@/lib/return-logic";
 
+export const dynamic = 'force-dynamic';
+
 // GET single return item
 export async function GET(
   request: NextRequest,

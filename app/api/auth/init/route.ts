@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+export const dynamic = 'force-dynamic';
+
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 /**

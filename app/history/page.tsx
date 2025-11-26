@@ -9,6 +9,8 @@ import { CheckCircle2, XCircle, DollarSign, Package, ChevronRight } from "lucide
 import { format } from "date-fns";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "History - Return Tracker",
   description: "View your return history and analytics",

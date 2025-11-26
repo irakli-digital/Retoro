@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionByToken, deleteSession } from "@/lib/queries";
 
+export const dynamic = 'force-dynamic';
+
 const SESSION_COOKIE = "retoro_session";
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 

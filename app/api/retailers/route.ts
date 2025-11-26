@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllRetailerPolicies } from "@/lib/queries";
 import { neon } from "@neondatabase/serverless";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

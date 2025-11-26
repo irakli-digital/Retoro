@@ -14,6 +14,8 @@ import RegistrationBanner from "@/components/registration-banner";
 import OAuthHandler from "@/components/oauth-handler";
 import { Suspense } from "react";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Return Tracker - Never Miss a Return Deadline",
   description: "Track your purchases and never miss a return deadline again",

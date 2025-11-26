@@ -5,6 +5,8 @@ import { getRetailerPolicy } from "@/lib/queries";
 import { getUserId } from "@/lib/auth-server";
 import { cookies } from "next/headers";
 
+export const dynamic = 'force-dynamic';
+
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 export async function POST(request: NextRequest) {

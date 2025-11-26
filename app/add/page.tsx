@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -158,6 +159,30 @@ export default function AddPurchasePage() {
       }
     } finally {
       setAddingRetailer(false)
+    }
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setInvoiceFile(file)
+    setUploadingInvoice(true)
+
+    try {
+      // TODO: Implement invoice upload and parsing logic
+      // For now, just show a toast
+      toast.info("Invoice upload feature coming soon")
+    } catch (error: any) {
+      console.error("Error uploading invoice:", error)
+      toast.error("Failed to upload invoice. Please try again.")
+    } finally {
+      setUploadingInvoice(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+      setInvoiceFile(null)
     }
   }
 

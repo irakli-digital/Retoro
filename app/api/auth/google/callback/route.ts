@@ -3,6 +3,8 @@ import { createUser, getUserByEmail, migrateAnonymousData, createSession } from 
 import { generateSessionToken, getSessionExpiration } from "@/lib/auth-utils";
 import { setSessionCookie } from "@/lib/auth-server";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Google OAuth callback handler
  * This endpoint handles the OAuth callback from Google
