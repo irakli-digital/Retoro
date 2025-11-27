@@ -51,6 +51,7 @@ export interface ReturnItem {
   price: number | null; // Price in original currency
   original_currency: string; // ISO 4217 currency code (e.g., 'USD', 'EUR', 'GEL')
   price_usd: number | null; // Price converted to USD
+  currency_symbol: string; // Currency symbol (e.g., '$', '€', '₾', '₹')
   purchase_date: string | Date;
   return_deadline: string | Date;
   is_returned: boolean;

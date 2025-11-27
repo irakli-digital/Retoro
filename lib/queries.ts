@@ -288,7 +288,7 @@ export async function getActiveReturnItemsByUserId(userId: string): Promise<Retu
 export async function addReturnItem(item: Omit<ReturnItem, 'id' | 'created_at' | 'updated_at'>): Promise<ReturnItem> {
   const result = await sql`
     INSERT INTO return_items (
-      retailer_id, name, price, original_currency, price_usd, 
+      retailer_id, name, price, original_currency, price_usd, currency_symbol,
       purchase_date, return_deadline, is_returned, user_id
     )
     VALUES (
@@ -297,6 +297,7 @@ export async function addReturnItem(item: Omit<ReturnItem, 'id' | 'created_at' |
       ${item.price || null},
       ${item.original_currency || 'USD'},
       ${item.price_usd || null},
+      ${item.currency_symbol || ''},
       ${item.purchase_date},
       ${item.return_deadline},
       ${item.is_returned || false},

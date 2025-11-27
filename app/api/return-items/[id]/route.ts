@@ -45,7 +45,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { retailer_id, name, price, purchase_date, user_id } = body;
+    const { retailer_id, name, price, purchase_date, user_id, currency_symbol } = body;
 
     if (!retailer_id || !purchase_date || !user_id) {
       return NextResponse.json(
@@ -88,15 +88,24 @@ export async function PUT(
     const { neon } = await import("@neondatabase/serverless");
     const sql = neon(process.env.DATABASE_URL!);
     
+    // Build update query dynamically to include currency_symbol if provided
+    const updateFields = [
+      sql`retailer_id = ${retailer_id}`,
+      sql`name = ${name || null}`,
+      sql`price = ${price || null}`,
+      sql`purchase_date = ${purchaseDate.toISOString()}`,
+      sql`return_deadline = ${returnDeadline.toISOString()}`,
+      sql`updated_at = NOW()`
+    ];
+    
+    // Add currency_symbol if provided
+    if (currency_symbol !== undefined) {
+      updateFields.push(sql`currency_symbol = ${currency_symbol || ''}`);
+    }
+    
     const result = await sql`
       UPDATE return_items
-      SET 
-        retailer_id = ${retailer_id},
-        name = ${name || null},
-        price = ${price || null},
-        purchase_date = ${purchaseDate.toISOString()},
-        return_deadline = ${returnDeadline.toISOString()},
-        updated_at = NOW()
+      SET ${sql.join(updateFields, sql`, `)}
       WHERE id = ${params.id} AND user_id = ${user_id}
       RETURNING *
     `;

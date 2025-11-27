@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       price, 
       purchase_date, 
       user_id: provided_user_id,
-      currency: original_currency = 'USD' // Default to USD if not provided
+      currency: original_currency = 'USD', // Default to USD if not provided
+      currency_symbol = '' // Currency symbol from n8n (e.g., '$', '€', '₾', '₹')
     } = body;
 
     if (!retailer_id || !purchase_date) {
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
       price: price || null,
       original_currency: currency,
       price_usd: price_usd,
+      currency_symbol: currency_symbol || '',
       purchase_date: purchaseDate,
       return_deadline: returnDeadline,
       is_returned: false,
