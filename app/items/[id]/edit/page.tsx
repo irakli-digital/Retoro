@@ -382,7 +382,7 @@ export default function EditItemPage() {
             className={cn(
               "w-full ios-rounded h-12 mt-6 transition-all duration-200",
               formData.retailerId 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" 
+                ? "bg-primary text-white hover:bg-primary/90 shadow-sm" 
                 : "bg-transparent text-muted-foreground opacity-50 border-0 hover:bg-transparent"
             )}
             disabled={submitting || !formData.retailerId}

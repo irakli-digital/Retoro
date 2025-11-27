@@ -40,7 +40,7 @@ export default function ContextualOnboarding({
           <Button
             asChild
             variant="default"
-            className="w-full ios-rounded mb-6 bg-primary hover:bg-primary/90 shadow-lg"
+            className="w-full ios-rounded mb-6 bg-primary hover:bg-primary/90 shadow-lg text-white"
             size="lg"
           >
             <Link href="/add">

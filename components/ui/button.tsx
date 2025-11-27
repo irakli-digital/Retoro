@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 ios-rounded shadow-sm",
+        default: "bg-primary text-white hover:bg-primary/90 ios-rounded shadow-sm",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 ios-rounded shadow-sm",
         outline:
@@ -18,7 +18,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 ios-rounded shadow-sm",
         ghost: "hover:bg-accent hover:text-accent-foreground ios-rounded",
         link: "text-primary underline-offset-4 hover:underline",
-        ios: "bg-primary text-primary-foreground hover:bg-primary/90 ios-rounded-lg shadow-sm font-semibold",
+        ios: "bg-primary text-white hover:bg-primary/90 ios-rounded-lg shadow-sm font-semibold",
         shopify: "bg-shopify-purple text-white hover:bg-shopify-purple/90 ios-rounded shadow-sm font-semibold",
       },
       size: {
