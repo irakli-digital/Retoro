@@ -68,7 +68,7 @@ export default function RootLayout({
             <Toaster 
               position="bottom-center" 
               richColors 
-              duration={2000}
+              duration={3000}
             />
           </SessionProvider>
         </ThemeProvider>
