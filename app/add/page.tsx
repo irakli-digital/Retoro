@@ -319,12 +319,26 @@ export default function AddPurchasePage() {
       const response = await axios.post("/api/return-items", requestData)
 
       if (response.data) {
+        // Log the user_id from response for debugging
+        console.log("[Add Purchase] Item created with user_id:", response.data.user_id)
+        
+        // If this is a guest user, ensure the cookie is set client-side
+        // The server sets it, but we need to ensure it's available before redirect
+        if (response.data.user_id && response.data.user_id.startsWith("user_")) {
+          const cookieName = "retoro_anonymous_user_id"
+          const cookieValue = response.data.user_id
+          const maxAge = 60 * 60 * 24 * 365 // 1 year
+          document.cookie = `${cookieName}=${cookieValue}; path=/; max-age=${maxAge}; SameSite=Lax`
+          console.log("[Add Purchase] Set anonymous cookie client-side:", cookieValue)
+        }
+        
         toast.success("Purchase added successfully!")
+        
         // Use window.location for full page reload to ensure cookie is available
-        // This ensures the anonymous cookie set server-side is available when dashboard loads
+        // This ensures the anonymous cookie is available when dashboard loads
         setTimeout(() => {
           window.location.href = "/"
-        }, 500) // Small delay to show toast
+        }, 1000) // Delay to ensure cookie is set and toast is visible
       }
     } catch (error: any) {
       console.error("[Add Purchase] Error adding item:", error)

@@ -29,8 +29,19 @@ export default async function DashboardPage() {
   const currentUser = await getCurrentUser();
   const isAuthenticated = currentUser !== null;
   
+  // Debug logging for guest users
+  if (!isAuthenticated) {
+    console.log("[Dashboard] Guest user detected:", {
+      userId,
+      isAnonymous: userId.startsWith("user_") || userId === "demo-user-123",
+    });
+  }
+  
   // Get user's preferred currency (default to USD)
-  const user = currentUser || (userId !== "demo-user-123" ? await getUserById(userId) : null);
+  // Only authenticated users have entries in the users table (UUID format)
+  // Anonymous users have IDs like "user_123..." which are not UUIDs
+  const isAnonymousUserId = userId === "demo-user-123" || userId.startsWith("user_");
+  const user = currentUser || (!isAnonymousUserId ? await getUserById(userId).catch(() => null) : null);
   const preferredCurrency = user?.preferred_currency || "USD";
   
   // Fetch return items and retailer policies
@@ -38,12 +49,14 @@ export default async function DashboardPage() {
   let retailers = [];
   
   try {
+    console.log("[Dashboard] Fetching items for user_id:", userId);
     [returnItems, retailers] = await Promise.all([
       getActiveReturnItemsByUserId(userId),
       getAllRetailerPolicies(),
     ]);
+    console.log("[Dashboard] Found items:", returnItems.length);
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("[Dashboard] Error fetching data:", error);
     // If tables don't exist yet, show empty state
   }
 

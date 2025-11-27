@@ -37,13 +37,17 @@ export async function getUserId(): Promise<string> {
     // No valid session - check for anonymous cookie
     const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
     if (anonymousUserId) {
-      console.log("[getUserId] Using anonymous user ID from cookie:", anonymousUserId);
+      console.log("[getUserId] ✅ Using anonymous user ID from cookie:", anonymousUserId);
       return anonymousUserId;
     }
     
     // No session and no anonymous cookie - return default
     // This will be initialized client-side via /api/auth/init
-    console.log("[getUserId] No session or anonymous cookie found, returning demo-user-123");
+    console.log("[getUserId] ⚠️ No session or anonymous cookie found, returning demo-user-123");
+    console.log("[getUserId] Available cookies:", {
+      sessionCookie: cookieStore.get(SESSION_COOKIE)?.value ? "exists" : "missing",
+      anonymousCookie: cookieStore.get(ANONYMOUS_USER_COOKIE)?.value ? "exists" : "missing",
+    });
     return "demo-user-123";
   } catch (error) {
     console.error("Error reading session:", error);
