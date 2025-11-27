@@ -157,7 +157,21 @@ export async function POST(request: NextRequest) {
     });
 
     console.log("[Return Items] ✅ Successfully created item:", item.id);
-    return NextResponse.json(item);
+    
+    // Return item with user_id for debugging
+    const response = NextResponse.json({
+      ...item,
+      user_id, // Include user_id in response for debugging
+    });
+    
+    // Ensure cookie is set in response headers
+    // The cookie should already be set via cookieStore.set(), but we'll log it for debugging
+    console.log("[Return Items] Cookie should be set:", {
+      anonymousCookie: cookieStore.get(ANONYMOUS_USER_COOKIE)?.value,
+      user_id,
+    });
+    
+    return response;
   } catch (error) {
     console.error("[Return Items] ❌ Error adding return item:", error);
     console.error("[Return Items] Error details:", {

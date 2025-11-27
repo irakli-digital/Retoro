@@ -259,8 +259,10 @@ export default function AddPurchasePage() {
         toast.success("Invoice processed successfully! Items are being added...")
       }
       
-      // Redirect immediately to dashboard
-      router.push("/")
+      // Redirect immediately to dashboard - use full page reload to ensure cookie is available
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 500) // Small delay to show toast
       
     } catch (error: any) {
       console.error("Error uploading invoice:", error)
@@ -318,7 +320,11 @@ export default function AddPurchasePage() {
 
       if (response.data) {
         toast.success("Purchase added successfully!")
-        router.push("/")
+        // Use window.location for full page reload to ensure cookie is available
+        // This ensures the anonymous cookie set server-side is available when dashboard loads
+        setTimeout(() => {
+          window.location.href = "/"
+        }, 500) // Small delay to show toast
       }
     } catch (error: any) {
       console.error("[Add Purchase] Error adding item:", error)

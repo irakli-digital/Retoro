@@ -2,9 +2,11 @@ import { cookies } from "next/headers";
 import { getUserById, getSessionByToken, updateSessionLastUsed } from "@/lib/queries";
 
 const SESSION_COOKIE = "retoro_session";
+const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 /**
  * Get the current user ID from session token (Server-side only)
+ * For anonymous users, checks for anonymous cookie
  * Returns a default user ID if session doesn't exist (session will be set client-side)
  */
 export async function getUserId(): Promise<string> {
@@ -30,12 +32,18 @@ export async function getUserId(): Promise<string> {
       } else {
         console.log("Session token invalid or expired");
       }
-    } else {
-      console.log("No session cookie found, using anonymous session");
     }
     
-    // Return a temporary ID - session will be set client-side
-    // This prevents errors during SSR
+    // No valid session - check for anonymous cookie
+    const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+    if (anonymousUserId) {
+      console.log("[getUserId] Using anonymous user ID from cookie:", anonymousUserId);
+      return anonymousUserId;
+    }
+    
+    // No session and no anonymous cookie - return default
+    // This will be initialized client-side via /api/auth/init
+    console.log("[getUserId] No session or anonymous cookie found, returning demo-user-123");
     return "demo-user-123";
   } catch (error) {
     console.error("Error reading session:", error);
