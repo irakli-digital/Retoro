@@ -216,88 +216,96 @@ export default function DashboardItemsList({ items, preferredCurrency }: Dashboa
             const isSelected = selectedItems.has(item.id)
             const isDeleting = deletingItems.has(item.id)
 
-            return (
-              <Card
-                key={item.id}
-                className={cn(
-                  "ios-rounded ios-shadow transition-all",
-                  bulkMode
-                    ? "cursor-pointer hover:shadow-lg active:scale-[0.99] ios-tap-highlight"
-                    : "",
-                  isSelected && bulkMode && "ring-2 ring-primary"
-                )}
-                onClick={bulkMode ? () => handleToggleSelect(item.id) : undefined}
-              >
-                <CardContent className="p-4">
-                  {/* Header: Product name and days remaining */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 pr-3">
-                      <h3 className="text-base font-semibold mb-1 truncate">
-                        {item.name || "Unnamed Item"}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {retailer && (
-                          <>
-                            <span>{retailer.name}</span>
-                            {retailer.has_free_returns && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                                Free Returns
-                              </Badge>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <Badge
-                      variant={badgeVariant}
-                      className={cn("text-xs font-medium shrink-0", urgencyColor)}
-                    >
-                      {formatDaysRemaining(daysRemaining)}
-                    </Badge>
-                  </div>
-
-                  {/* Info row: Date and Price */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-4 text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span className="text-xs">
-                          {format(new Date(item.return_deadline), "MMM d")}
-                        </span>
-                      </div>
-                      {item.price && (
-                        <div className="flex items-center gap-1.5">
-                          <DollarSign className="h-3.5 w-3.5" />
-                          <CurrencyDisplay
-                            amount={item.price}
-                            originalCurrency={item.original_currency || "USD"}
-                            preferredCurrency={preferredCurrency}
-                            className="text-xs font-medium text-foreground"
-                          />
-                        </div>
+            const cardContent = (
+              <CardContent className="p-4">
+                {/* Header: Product name and days remaining */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0 pr-3">
+                    <h3 className="text-base font-semibold mb-1 truncate">
+                      {item.name || "Unnamed Item"}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {retailer && (
+                        <>
+                          <span>{retailer.name}</span>
+                          {retailer.has_free_returns && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                              Free Returns
+                            </Badge>
+                          )}
+                        </>
                       )}
                     </div>
-                    {bulkMode ? (
-                      <button
-                        onClick={(e) => handleDeleteItem(item.id, e)}
-                        disabled={isDeleting}
-                        className={cn(
-                          "p-1 rounded transition-colors",
-                          isDeleting
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-destructive/10 text-destructive hover:text-destructive"
-                        )}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    ) : (
-                      <Link href={`/items/${item.id}`} className="group">
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                      </Link>
+                  </div>
+                  <Badge
+                    variant={badgeVariant}
+                    className={cn("text-xs font-medium shrink-0", urgencyColor)}
+                  >
+                    {formatDaysRemaining(daysRemaining)}
+                  </Badge>
+                </div>
+
+                {/* Info row: Date and Price */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-4 text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span className="text-xs">
+                        {format(new Date(item.return_deadline), "MMM d")}
+                      </span>
+                    </div>
+                    {item.price && (
+                      <div className="flex items-center gap-1.5">
+                        <CurrencyDisplay
+                          amount={item.price}
+                          originalCurrency={item.original_currency || "USD"}
+                          preferredCurrency={preferredCurrency}
+                          className="text-xs font-medium text-foreground"
+                        />
+                      </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                  {bulkMode ? (
+                    <button
+                      onClick={(e) => handleDeleteItem(item.id, e)}
+                      disabled={isDeleting}
+                      className={cn(
+                        "p-1 rounded transition-colors",
+                        isDeleting
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:bg-destructive/10 text-destructive hover:text-destructive"
+                      )}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  )}
+                </div>
+              </CardContent>
+            )
+
+            if (bulkMode) {
+              return (
+                <Card
+                  key={item.id}
+                  className={cn(
+                    "ios-rounded ios-shadow transition-all cursor-pointer hover:shadow-lg active:scale-[0.99] ios-tap-highlight",
+                    isSelected && "ring-2 ring-primary"
+                  )}
+                  onClick={() => handleToggleSelect(item.id)}
+                >
+                  {cardContent}
+                </Card>
+              )
+            }
+
+            return (
+              <Link key={item.id} href={`/items/${item.id}`} className="block group">
+                <Card className="ios-rounded ios-shadow transition-all hover:shadow-lg active:scale-[0.99] ios-tap-highlight cursor-pointer">
+                  {cardContent}
+                </Card>
+              </Link>
             )
           })}
         </div>

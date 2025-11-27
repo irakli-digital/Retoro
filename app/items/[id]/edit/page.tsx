@@ -58,6 +58,7 @@ export default function EditItemPage() {
     price: "",
     currency: "USD",
     purchaseDate: new Date(),
+    userId: "", // Added userId
   })
 
   const [selectedRetailer, setSelectedRetailer] = useState<RetailerPolicy | null>(null)
@@ -101,6 +102,7 @@ export default function EditItemPage() {
           price: item.price ? item.price.toString() : "",
           currency: item.original_currency || preferredCurrency,
           purchaseDate: new Date(item.purchase_date),
+          userId: item.user_id, // Set userId
         })
       } catch (error: any) {
         console.error("Error fetching data:", error)
@@ -152,33 +154,12 @@ export default function EditItemPage() {
     }
   }
 
-  const formatPriceInput = (value: string): string => {
-    // Remove all non-digit characters except decimal point
-    const cleaned = value.replace(/[^\d.]/g, '')
-    
-    // Handle multiple decimal points - keep only the first one
-    const parts = cleaned.split('.')
-    let formatted = parts[0]
-    if (parts.length > 1) {
-      formatted += '.' + parts.slice(1).join('').substring(0, 2) // Max 2 decimal places
-    }
-    
-    // Add comma separators for thousands
-    if (formatted) {
-      const numberPart = formatted.split('.')[0]
-      const decimalPart = formatted.split('.')[1]
-      const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-      return decimalPart !== undefined ? `${formattedNumber}.${decimalPart}` : formattedNumber
-    }
-    
-    return formatted
-  }
-
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    // Store the raw value (without commas) for calculations
-    const rawValue = value.replace(/,/g, '')
-    setFormData({ ...formData, price: rawValue })
+    // Allow digits and one decimal point
+    if (/^\d*\.?\d*$/.test(value)) {
+      setFormData({ ...formData, price: value })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,13 +182,14 @@ export default function EditItemPage() {
         return
       }
 
-      // Get user_id from session (handled server-side)
+      // Send update request with all required fields including user_id
       const response = await axios.put(`/api/return-items/${itemId}`, {
         retailer_id: formData.retailerId,
         name: formData.name || null,
         price: formData.price ? parseFloat(formData.price) : null,
         currency: formData.currency,
         purchase_date: purchaseDate.toISOString(),
+        user_id: formData.userId, // Include userId
       })
 
       if (response.data) {
@@ -346,7 +328,7 @@ export default function EditItemPage() {
                     type="text"
                     inputMode="decimal"
                     placeholder="00.00"
-                    value={formData.price ? formatPriceInput(formData.price) : ''}
+                    value={formData.price}
                     onChange={handlePriceChange}
                     className="ios-rounded h-12 pl-10 w-full"
                   />

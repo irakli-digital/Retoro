@@ -42,7 +42,6 @@ export default async function HistoryPage() {
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs">Money Saved</CardDescription>
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-green-500" />
                   ${totalValueReturned.toFixed(2)}
                 </CardTitle>
               </CardHeader>
@@ -66,7 +65,7 @@ export default async function HistoryPage() {
               <TabsTrigger value="kept" className="ios-rounded">Kept</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="space-y-2">
+            <TabsContent value="all" className="flex flex-col gap-2.5">
               {allItems.length === 0 ? (
                 <Card className="ios-rounded">
                   <CardContent className="py-12 text-center">
@@ -81,7 +80,7 @@ export default async function HistoryPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="returned" className="space-y-2">
+            <TabsContent value="returned" className="flex flex-col gap-2.5">
               {returnedItems.length === 0 ? (
                 <Card className="ios-rounded">
                   <CardContent className="py-12 text-center">
@@ -96,7 +95,7 @@ export default async function HistoryPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="kept" className="space-y-2">
+            <TabsContent value="kept" className="flex flex-col gap-2.5">
               {keptItems.length === 0 ? (
                 <Card className="ios-rounded">
                   <CardContent className="py-12 text-center">
@@ -121,7 +120,7 @@ function HistoryItemCard({ item }: { item: any }) {
   const retailer = item.retailer;
 
   return (
-    <Link href={`/items/${item.id}`}>
+    <Link href={`/items/${item.id}`} className="block">
       <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight cursor-pointer group">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">

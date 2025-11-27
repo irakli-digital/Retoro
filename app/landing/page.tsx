@@ -366,9 +366,6 @@ export default function LandingPage() {
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   className="relative z-10 flex flex-col items-center text-center space-y-4"
                 >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xl font-bold shadow-lg">
-                    {step.step}
-                  </div>
                   <h3 className="text-xl font-bold">{step.title}</h3>
                   <p className="text-muted-foreground">{step.description}</p>
                 </motion.div>

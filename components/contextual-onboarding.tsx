@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Package, Plus } from "lucide-react"
+import { Package, Plus, ShoppingBag, Timer, Bell } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -40,52 +40,58 @@ export default function ContextualOnboarding({
           <Button
             asChild
             variant="default"
-            className="w-full ios-rounded mb-6 bg-primary hover:bg-primary/90 shadow-lg text-white"
+            className="w-full ios-rounded mb-8 bg-primary hover:bg-primary/90 shadow-lg text-white h-12 text-base"
             size="lg"
           >
             <Link href="/add">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-5 w-5" />
               Add Your First Purchase
             </Link>
           </Button>
 
           {/* How It Works Section */}
-          <div>
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              How it works
-            </h3>
+          <div className="mt-8">
+            <div className="relative flex items-center my-6">
+              <div className="flex-grow border-t border-border/40"></div>
+              <span className="flex-shrink mx-4 text-sm uppercase tracking-wider text-muted-foreground">How it works</span>
+              <div className="flex-grow border-t border-border/40"></div>
+            </div>
             <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                  1
+              {/* Step 1 */}
+              <div className="flex items-start gap-4 p-3 rounded-xl bg-background/60 border border-border/10 shadow-sm">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Add your purchase</p>
-                  <p className="text-xs text-muted-foreground">
-                    Select retailer, add item details, and purchase date
+                <div className="flex-1 pt-1">
+                  <p className="text-sm font-semibold text-foreground">Add your purchase</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    Enter item details and purchase date. We support any retailer.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                  2
+
+              {/* Step 2 */}
+              <div className="flex items-start gap-4 p-3 rounded-xl bg-background/60 border border-border/10 shadow-sm">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Timer className="w-5 h-5" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">We track your return deadline</p>
-                  <p className="text-xs text-muted-foreground">
-                    Automatically calculated based on retailer policy
+                <div className="flex-1 pt-1">
+                  <p className="text-sm font-semibold text-foreground">We track deadlines</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    Deadlines are automatically calculated based on store policy.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                  3
+
+              {/* Step 3 */}
+              <div className="flex items-start gap-4 p-3 rounded-xl bg-background/60 border border-border/10 shadow-sm">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Bell className="w-5 h-5" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Get reminders</p>
-                  <p className="text-xs text-muted-foreground">
-                    Never miss a return deadline again
+                <div className="flex-1 pt-1">
+                  <p className="text-sm font-semibold text-foreground">Get reminders</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    Receive notifications before your return window closes.
                   </p>
                 </div>
               </div>
