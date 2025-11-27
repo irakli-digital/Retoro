@@ -25,8 +25,8 @@ export default function ContextualOnboarding({
           {/* Add Button - Top */}
           <Button
             asChild
-            variant="shopify"
-            className="w-full ios-rounded mb-6"
+            variant="default"
+            className="w-full ios-rounded mb-6 bg-primary hover:bg-primary/90 shadow-lg"
             size="lg"
           >
             <Link href="/add">
