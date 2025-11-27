@@ -321,9 +321,9 @@ export default function EditItemPage() {
 
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm text-muted-foreground">Price (optional)</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <div className="flex gap-3">
+                <div className="relative flex-1 min-w-0">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10 font-medium">
                     {getCurrencySymbol(formData.currency)}
                   </span>
                   <Input
@@ -333,24 +333,29 @@ export default function EditItemPage() {
                     placeholder="0.00"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="ios-rounded h-12 pl-7"
+                    className="ios-rounded h-12 pl-10 w-full"
                   />
                 </div>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
-                >
-                  <SelectTrigger className="w-[140px] ios-rounded h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMON_CURRENCIES.map((curr) => (
-                      <SelectItem key={curr.code} value={curr.code}>
-                        {curr.code} ({curr.symbol})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex-shrink-0">
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  >
+                    <SelectTrigger className="w-[170px] ios-rounded h-12 min-w-[170px] flex-shrink-0">
+                      <SelectValue className="truncate pr-6" />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[170px]">
+                      {COMMON_CURRENCIES.map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          <span className="flex items-center gap-2">
+                            <span className="font-medium">{curr.code}</span>
+                            <span className="text-muted-foreground">({curr.symbol})</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>

@@ -131,6 +131,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Add return item
+    console.log("[Return Items] Creating item with data:", {
+      retailer_id,
+      name,
+      price,
+      currency,
+      currency_symbol: finalCurrencySymbol,
+      purchase_date: purchaseDate.toISOString(),
+      return_deadline: returnDeadline.toISOString(),
+      user_id,
+    });
+
     const item = await addReturnItem({
       retailer_id,
       name: name || null,
@@ -145,11 +156,21 @@ export async function POST(request: NextRequest) {
       user_id,
     });
 
+    console.log("[Return Items] ✅ Successfully created item:", item.id);
     return NextResponse.json(item);
   } catch (error) {
-    console.error("Error adding return item:", error);
+    console.error("[Return Items] ❌ Error adding return item:", error);
+    console.error("[Return Items] Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
     return NextResponse.json(
-      { error: "Failed to add return item", details: error instanceof Error ? error.message : "Unknown error" },
+      { 
+        error: "Failed to add return item", 
+        details: error instanceof Error ? error.message : "Unknown error",
+        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

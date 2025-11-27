@@ -268,21 +268,35 @@ export default function AddPurchasePage() {
         return
       }
 
-      // Note: user_id is now handled server-side via session
-      const response = await axios.post("/api/return-items", {
+      // Validate purchase date
+      if (!purchaseDate || isNaN(purchaseDate.getTime())) {
+        toast.error("Please select a valid purchase date")
+        setSubmitting(false)
+        return
+      }
+
+      // Prepare request data
+      const requestData = {
         retailer_id: formData.retailerId,
         name: formData.name || null,
         price: formData.price ? parseFloat(formData.price) : null,
         currency: formData.currency,
         purchase_date: purchaseDate.toISOString(),
-      })
+      }
+
+      console.log("[Add Purchase] Submitting:", requestData)
+
+      // Note: user_id is now handled server-side via session
+      const response = await axios.post("/api/return-items", requestData)
 
       if (response.data) {
+        toast.success("Purchase added successfully!")
         router.push("/")
       }
     } catch (error: any) {
-      console.error("Error adding item:", error)
-      const errorMessage = error.response?.data?.error || error.message || "Failed to add item. Please try again."
+      console.error("[Add Purchase] Error adding item:", error)
+      console.error("[Add Purchase] Error response:", error.response?.data)
+      const errorMessage = error.response?.data?.error || error.response?.data?.details || error.message || "Failed to add item. Please try again."
       toast.error(errorMessage)
     } finally {
       setSubmitting(false)
@@ -300,11 +314,13 @@ export default function AddPurchasePage() {
       <main className="flex-1 container mx-auto px-4 py-6">
         {/* Invoice Upload Option */}
         <div className="max-w-2xl mx-auto mb-6">
-          <Card className="ios-rounded border-dashed">
+          <Card className="ios-rounded border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/50 transition-all">
             <CardContent className="p-6">
               <div className="flex flex-col items-center justify-center gap-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <ImageIcon className="h-5 w-5" />
+                <div className="flex items-center gap-2 text-foreground">
+                  <div className="p-2 rounded-full bg-primary/20">
+                    <ImageIcon className="h-5 w-5 text-primary" />
+                  </div>
                   <span className="text-sm font-medium">Or upload invoice (image, PDF, or document)</span>
                 </div>
                 <input
@@ -318,19 +334,19 @@ export default function AddPurchasePage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="ios-rounded"
+                  className="ios-rounded border-2 border-primary/50 bg-background hover:bg-primary/10 hover:border-primary text-primary shadow-md hover:shadow-lg transition-all duration-200 px-8 py-6 h-auto font-semibold text-base group"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingInvoice}
                 >
                   {uploadingInvoice ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing Invoice...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <span>Processing Invoice...</span>
                     </>
                   ) : (
                     <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload Invoice
+                      <Upload className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                      <span>Upload Invoice</span>
                     </>
                   )}
                 </Button>
@@ -496,9 +512,9 @@ export default function AddPurchasePage() {
 
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm text-muted-foreground">Price (optional)</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <div className="flex gap-3">
+                <div className="relative flex-1 min-w-0">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10 font-medium">
                     {getCurrencySymbol(formData.currency)}
                   </span>
                   <Input
@@ -508,24 +524,29 @@ export default function AddPurchasePage() {
                     placeholder="0.00"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="ios-rounded h-12 pl-7"
+                    className="ios-rounded h-12 pl-10 w-full"
                   />
                 </div>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
-                >
-                  <SelectTrigger className="w-[140px] ios-rounded h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMON_CURRENCIES.map((curr) => (
-                      <SelectItem key={curr.code} value={curr.code}>
-                        {curr.code} ({curr.symbol})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex-shrink-0">
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  >
+                    <SelectTrigger className="w-[170px] ios-rounded h-12 min-w-[170px] flex-shrink-0">
+                      <SelectValue className="truncate pr-6" />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[170px]">
+                      {COMMON_CURRENCIES.map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          <span className="flex items-center gap-2">
+                            <span className="font-medium">{curr.code}</span>
+                            <span className="text-muted-foreground">({curr.symbol})</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>

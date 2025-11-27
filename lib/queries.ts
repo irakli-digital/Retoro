@@ -286,27 +286,55 @@ export async function getActiveReturnItemsByUserId(userId: string): Promise<Retu
 }
 
 export async function addReturnItem(item: Omit<ReturnItem, 'id' | 'created_at' | 'updated_at'>): Promise<ReturnItem> {
-  const result = await sql`
-    INSERT INTO return_items (
-      retailer_id, name, price, original_currency, price_usd, currency_symbol,
-      purchase_date, return_deadline, is_returned, user_id
-    )
-    VALUES (
-      ${item.retailer_id},
-      ${item.name || null},
-      ${item.price || null},
-      ${item.original_currency || 'USD'},
-      ${item.price_usd || null},
-      ${item.currency_symbol || ''},
-      ${item.purchase_date},
-      ${item.return_deadline},
-      ${item.is_returned || false},
-      ${item.user_id}
-    )
-    RETURNING *
-  `;
-  
-  return result[0] as ReturnItem;
+  try {
+    console.log("[addReturnItem] Inserting item:", {
+      retailer_id: item.retailer_id,
+      name: item.name,
+      price: item.price,
+      original_currency: item.original_currency,
+      price_usd: item.price_usd,
+      currency_symbol: item.currency_symbol,
+      purchase_date: item.purchase_date,
+      return_deadline: item.return_deadline,
+      user_id: item.user_id,
+    });
+
+    const result = await sql`
+      INSERT INTO return_items (
+        retailer_id, name, price, original_currency, price_usd, currency_symbol,
+        purchase_date, return_deadline, is_returned, user_id
+      )
+      VALUES (
+        ${item.retailer_id},
+        ${item.name || null},
+        ${item.price || null},
+        ${item.original_currency || 'USD'},
+        ${item.price_usd || null},
+        ${item.currency_symbol || ''},
+        ${item.purchase_date},
+        ${item.return_deadline},
+        ${item.is_returned || false},
+        ${item.user_id}
+      )
+      RETURNING *
+    `;
+    
+    if (!result || result.length === 0) {
+      throw new Error("Failed to insert return item - no result returned");
+    }
+
+    console.log("[addReturnItem] ✅ Successfully inserted item:", result[0].id);
+    return result[0] as ReturnItem;
+  } catch (error: any) {
+    console.error("[addReturnItem] ❌ Database error:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      constraint: error.constraint,
+    });
+    throw error;
+  }
 }
 
 export async function updateReturnStatus(
