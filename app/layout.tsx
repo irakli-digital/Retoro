@@ -15,7 +15,9 @@ export const metadata: Metadata = {
   title: "Retoro - Return Tracker",
   description: "Track your purchases and never miss a return deadline again",
   icons: {
-    icon: "/images/retoro-logo-light.svg",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   generator: "v0.dev",
   metadataBase: new URL('https://mypen.ge'),
