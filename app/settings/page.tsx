@@ -154,12 +154,17 @@ export default function SettingsPage() {
             <h2 className="ios-section-header mb-2">Currency</h2>
             <Card className="ios-rounded">
               <CardContent className="p-0">
-                <div className="flex items-center justify-between p-4">
+                <div className="flex items-center justify-between p-4 ios-touch-target">
                   <div className="flex items-center gap-3">
                     <DollarSign className="h-5 w-5 text-muted-foreground" />
-                    <Label htmlFor="currency" className="font-normal">
-                      Preferred Currency
-                    </Label>
+                    <div>
+                      <Label htmlFor="currency" className="font-normal cursor-pointer">
+                        Preferred Currency
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Display currency for all prices
+                      </p>
+                    </div>
                   </div>
                   {loadingCurrency ? (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -177,11 +182,6 @@ export default function SettingsPage() {
                       </SelectContent>
                     </Select>
                   )}
-                </div>
-                <div className="px-4 pb-4">
-                  <p className="text-xs text-muted-foreground">
-                    All prices will be displayed in your preferred currency. Original purchase currency is preserved.
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -258,7 +258,7 @@ export default function SettingsPage() {
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </Link>
                 <Link
-                  href="mailto:support@retoro.app"
+                  href="/settings/support"
                   className="flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors ios-tap-highlight ios-touch-target"
                 >
                   <div className="flex items-center gap-3">

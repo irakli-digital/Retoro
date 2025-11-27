@@ -329,6 +329,120 @@
     },
     {
       "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Analyze the following text extracted from an uploaded document and determine if it is an invoice, receipt, or payment confirmation.\n\nText to analyze:\n{{ $json.pages[0].markdown }}\n\nYour task:\n1. Determine if this document is an invoice, receipt, or payment confirmation\n2. Look for indicators such as:\n   - Seller/merchant name\n   - Itemized list of products or services\n   - Prices and totals\n   - Payment information\n   - Invoice/receipt numbers\n   - Dates\n\nReturn ONLY a JSON object with this structure:\n{\n  \"is_valid_invoice\": true/false,\n  \"document_type\": \"invoice\" | \"receipt\" | \"payment_confirmation\" | \"other\",\n  \"confidence\": 0.0-1.0\n}\n\nIf the document is clearly NOT an invoice/receipt/payment confirmation (e.g., random image, screenshot, document without purchase information), set is_valid_invoice to false."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"is_valid_invoice\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether this is a valid invoice, receipt, or payment confirmation\"\n    },\n    \"document_type\": {\n      \"type\": \"string\",\n      \"enum\": [\"invoice\", \"receipt\", \"payment_confirmation\", \"other\"],\n      \"description\": \"Type of document\"\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"minimum\": 0,\n      \"maximum\": 1,\n      \"description\": \"Confidence level (0.0 to 1.0)\"\n    }\n  },\n  \"required\": [\"is_valid_invoice\", \"document_type\", \"confidence\"],\n  \"additionalProperties\": false\n}"
+            }
+          }
+        }
+      },
+      "id": "validate-invoice-node-id",
+      "name": "Validate Invoice",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        736,
+        1488
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "eJNHP6n8O3Y9Iv2F",
+          "name": "Open Ai - IC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "invoice-validation-condition",
+              "leftValue": "={{ $json.is_valid_invoice }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        792,
+        1488
+      ],
+      "id": "check-if-invoice-node-id",
+      "name": "Check If Invoice"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preserve original text data from Extract text node for Extract Invoice Data with AI\nconst originalTextData = $('Extract text').item.json;\nconst validationResult = $input.item.json;\n\n// Merge validation result with original text data\nreturn {\n  json: {\n    ...originalTextData, // Preserve pages[0].markdown for extraction\n    validation: validationResult // Keep validation info for reference\n  }\n};"
+      },
+      "id": "preserve-text-data-node-id",
+      "name": "Preserve Text Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        904,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get user_id from webhook query parameters\nconst webhookData = $('Webhook Trigger1').item.json;\nconst userId = webhookData.query?.user_id || webhookData.user_id || webhookData.userId;\n\n// Get validation result\nconst validationResult = $('Validate Invoice').item.json;\n\nreturn {\n  json: {\n    error: true,\n    message: \"Sorry, this is not a valid invoice. Please add your purchase manually using the form below.\",\n    document_type: validationResult.document_type || \"other\",\n    confidence: validationResult.confidence || 0,\n    user_id: userId\n  }\n};"
+      },
+      "id": "error-response-node-id",
+      "name": "Format Error Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        792,
+        1680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-error-node-id",
+      "name": "Respond with Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        1680
+      ]
+    },
+    {
+      "parameters": {
         "httpMethod": "POST",
         "path": "invoice-process",
         "responseMode": "lastNode",
@@ -495,7 +609,58 @@
       "main": [
         [
           {
+            "node": "Validate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Invoice": {
+      "main": [
+        [
+          {
+            "node": "Check If Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Invoice": {
+      "main": [
+        [
+          {
+            "node": "Preserve Text Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preserve Text Data": {
+      "main": [
+        [
+          {
             "node": "Extract Invoice Data with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Response": {
+      "main": [
+        [
+          {
+            "node": "Respond with Error",
             "type": "main",
             "index": 0
           }

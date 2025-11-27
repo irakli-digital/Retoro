@@ -182,7 +182,19 @@ export default function AddPurchasePage() {
         timeout: 60000, // 60 second timeout for n8n processing
       })
 
-      const { job_id, status, result } = response.data
+      const { job_id, status, result, error, validation_failed } = response.data
+
+      // Check if validation failed (not a valid invoice)
+      if (validation_failed && error) {
+        toast.error(error)
+        setUploadingInvoice(false)
+        // Reset file input on validation error
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+        setInvoiceFile(null)
+        return
+      }
 
       // Show success message
       if (result && result.items_created && result.items_created.length > 0) {

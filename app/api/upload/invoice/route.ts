@@ -216,7 +216,21 @@ export async function POST(request: NextRequest) {
       console.log("[Invoice Upload] N8N result received:", {
         hasResult: !!n8nResult,
         itemsCreated: n8nResult?.items_created?.length || 0,
+        hasError: !!n8nResult?.error,
       });
+      
+      // Check if n8n returned an error (e.g., invalid invoice)
+      if (n8nResult?.error && n8nResult?.message) {
+        console.log("[Invoice Upload] N8N validation failed - not a valid invoice");
+        return NextResponse.json(
+          { 
+            error: n8nResult.message,
+            validation_failed: true,
+            document_type: n8nResult.document_type,
+          },
+          { status: 400 }
+        );
+      }
     } catch (jsonError: any) {
       console.error("[Invoice Upload] Failed to parse n8n response:", jsonError);
       // Still return success if webhook was called successfully

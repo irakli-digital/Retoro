@@ -325,3 +325,14 @@ html body {
     @apply px-4 py-3 ios-separator last:border-b-0;
   }
 }
+
+/* Sonner toast spacing - avoid covering bottom tab bar on mobile */
+[data-sonner-toaster] {
+  bottom: 70px !important;
+}
+
+@media (min-width: 768px) {
+  [data-sonner-toaster] {
+    bottom: 16px !important;
+  }
+}
