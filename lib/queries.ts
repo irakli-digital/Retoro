@@ -337,6 +337,38 @@ export async function addReturnItem(item: Omit<ReturnItem, 'id' | 'created_at' |
   }
 }
 
+export async function updateReturnItem(
+  itemId: string, 
+  userId: string,
+  updates: Partial<Omit<ReturnItem, 'id' | 'created_at' | 'updated_at' | 'user_id'>>
+): Promise<ReturnItem> {
+  const updateParts: any[] = [];
+  
+  if (updates.retailer_id !== undefined) updateParts.push(sql`retailer_id = ${updates.retailer_id}`);
+  if (updates.name !== undefined) updateParts.push(sql`name = ${updates.name}`);
+  if (updates.price !== undefined) updateParts.push(sql`price = ${updates.price}`);
+  if (updates.original_currency !== undefined) updateParts.push(sql`original_currency = ${updates.original_currency}`);
+  if (updates.price_usd !== undefined) updateParts.push(sql`price_usd = ${updates.price_usd}`);
+  if (updates.currency_symbol !== undefined) updateParts.push(sql`currency_symbol = ${updates.currency_symbol}`);
+  if (updates.purchase_date !== undefined) updateParts.push(sql`purchase_date = ${updates.purchase_date}`);
+  if (updates.return_deadline !== undefined) updateParts.push(sql`return_deadline = ${updates.return_deadline}`);
+  
+  updateParts.push(sql`updated_at = NOW()`);
+
+  const result = await sql`
+    UPDATE return_items
+    SET ${sql.join(updateParts, sql`, `)}
+    WHERE id = ${itemId} AND user_id = ${userId}
+    RETURNING *
+  `;
+  
+  if (result.length === 0) {
+    throw new Error('Return item not found or access denied');
+  }
+  
+  return result[0] as ReturnItem;
+}
+
 export async function updateReturnStatus(
   itemId: string,
   isReturned: boolean,

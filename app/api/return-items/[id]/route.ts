@@ -3,7 +3,8 @@ import {
   getReturnItemById, 
   updateReturnStatus, 
   deleteReturnItem,
-  getRetailerPolicy 
+  getRetailerPolicy,
+  updateReturnItem
 } from "@/lib/queries";
 import { calculateDeadline } from "@/lib/return-logic";
 import { getUserId } from "@/lib/auth-server";
@@ -110,47 +111,18 @@ export async function PUT(
       finalCurrencySymbol = currency_symbol || '';
     }
 
-    // Update item (we'll need to add an updateReturnItem function)
-    // For now, we'll use a direct SQL update
-    const { neon } = await import("@neondatabase/serverless");
-    const sql = neon(process.env.DATABASE_URL!);
-    
-    // Build update query dynamically
-    const updateFields = [
-      sql`retailer_id = ${retailer_id}`,
-      sql`name = ${name || null}`,
-      sql`price = ${price || null}`,
-      sql`purchase_date = ${purchaseDate.toISOString()}`,
-      sql`return_deadline = ${returnDeadline.toISOString()}`,
-      sql`updated_at = NOW()`
-    ];
-    
-    // Add currency fields if currency was provided
-    if (original_currency) {
-      updateFields.push(sql`original_currency = ${currency}`);
-      updateFields.push(sql`currency_symbol = ${finalCurrencySymbol}`);
-      if (price_usd !== null && price_usd !== undefined) {
-        updateFields.push(sql`price_usd = ${price_usd}`);
-      }
-    } else if (currency_symbol !== undefined) {
-      updateFields.push(sql`currency_symbol = ${finalCurrencySymbol}`);
-    }
-    
-    const result = await sql`
-      UPDATE return_items
-      SET ${sql.join(updateFields, sql`, `)}
-      WHERE id = ${params.id} AND user_id = ${user_id}
-      RETURNING *
-    `;
+    const updatedItem = await updateReturnItem(params.id, user_id, {
+      retailer_id,
+      name: name || null,
+      price: price || null,
+      original_currency: original_currency ? currency : undefined,
+      price_usd: price_usd,
+      currency_symbol: finalCurrencySymbol,
+      purchase_date: purchaseDate,
+      return_deadline: returnDeadline
+    });
 
-    if (result.length === 0) {
-      return NextResponse.json(
-        { error: "Failed to update item" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(result[0]);
+    return NextResponse.json(updatedItem);
   } catch (error) {
     console.error("Error updating return item:", error);
     return NextResponse.json(
@@ -186,11 +158,10 @@ export async function PATCH(
       userIdFromGetUserId: user_id,
       providedUserId: provided_user_id,
       hasSessionToken: !!sessionToken,
-      isDemoUser: user_id === "demo-user-123",
     });
     
     // If user is not authenticated, use provided user_id or anonymous cookie
-    if (user_id === "demo-user-123") {
+    if (!user_id) {
       if (provided_user_id) {
         user_id = provided_user_id;
         console.log("[Return Items PATCH] Using provided user_id (anonymous):", user_id);
@@ -212,7 +183,7 @@ export async function PATCH(
       // User is authenticated - always use their real user ID, ignore provided_user_id
     }
 
-    if (!user_id || user_id === "demo-user-123") {
+    if (!user_id) {
       return NextResponse.json(
         { error: "Unable to determine user session" },
         { status: 401 }
@@ -277,11 +248,10 @@ export async function DELETE(
       userIdFromGetUserId: user_id,
       providedUserId: provided_user_id,
       hasSessionToken: !!sessionToken,
-      isDemoUser: user_id === "demo-user-123",
     });
     
     // If user is not authenticated, use provided user_id or anonymous cookie
-    if (user_id === "demo-user-123") {
+    if (!user_id) {
       if (provided_user_id) {
         user_id = provided_user_id;
         console.log("[Return Items DELETE] Using provided user_id (anonymous):", user_id);
@@ -303,7 +273,7 @@ export async function DELETE(
       // User is authenticated - always use their real user ID, ignore provided_user_id
     }
 
-    if (!user_id || user_id === "demo-user-123") {
+    if (!user_id) {
       return NextResponse.json(
         { error: "Unable to determine user session" },
         { status: 401 }
@@ -346,4 +316,3 @@ export async function DELETE(
     );
   }
 }
-

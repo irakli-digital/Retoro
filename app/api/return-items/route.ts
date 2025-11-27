@@ -31,22 +31,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user ID - prioritize session over provided user_id from n8n
-    // This ensures logged-in users always use their authenticated ID
     let user_id = await getUserId();
     
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("retoro_session")?.value;
     
-    console.log("[Return Items] User ID check:", {
-      userIdFromGetUserId: user_id,
-      providedUserIdFromN8n: provided_user_id,
-      hasSessionToken: !!sessionToken,
-      isDemoUser: user_id === "demo-user-123",
-    });
-    
-    // CRITICAL: If user is authenticated (not demo-user-123), ALWAYS use their real ID
-    // Do NOT use provided_user_id from n8n when user is logged in
-    if (user_id === "demo-user-123") {
+    // If no authenticated user, handle anonymous/provided ID
+    if (!user_id) {
       // User is NOT authenticated - use provided user_id from n8n or anonymous cookie
       if (provided_user_id) {
         user_id = provided_user_id;
@@ -74,21 +64,18 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // User IS authenticated - ALWAYS use their real user ID, ignore provided_user_id from n8n
-      // Clear any anonymous cookie to prevent confusion
-      const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
-      if (anonymousUserId) {
-        console.log("[Return Items] Clearing anonymous cookie (user is authenticated):", anonymousUserId);
-        cookieStore.set(ANONYMOUS_USER_COOKIE, "", { maxAge: 0, path: "/" });
-      }
-      console.log("[Return Items] ✅ Using authenticated user ID (ignoring n8n provided_user_id):", user_id);
+      console.log("[Return Items] ✅ Using authenticated user ID:", user_id);
+      // We do NOT delete the anonymous cookie here.
+      // It will be handled by the login/registration endpoints upon migration.
     }
 
-    if (!user_id || user_id === "demo-user-123") {
+    if (!user_id) {
+      // This should theoretically not be reached due to the generation logic above,
+      // but strictly typing requires us to handle it.
       console.error("[Return Items] Failed to determine user_id");
       return NextResponse.json(
         { error: "Unable to determine user session" },
-        { status: 401 }
+        { status: 500 }
       );
     }
     
@@ -131,17 +118,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Add return item
-    console.log("[Return Items] Creating item with data:", {
-      retailer_id,
-      name,
-      price,
-      currency,
-      currency_symbol: finalCurrencySymbol,
-      purchase_date: purchaseDate.toISOString(),
-      return_deadline: returnDeadline.toISOString(),
-      user_id,
-    });
-
     const item = await addReturnItem({
       retailer_id,
       name: name || null,
@@ -158,35 +134,18 @@ export async function POST(request: NextRequest) {
 
     console.log("[Return Items] ✅ Successfully created item:", item.id);
     
-    // Return item with user_id for debugging
-    const response = NextResponse.json({
+    return NextResponse.json({
       ...item,
       user_id, // Include user_id in response for debugging
     });
-    
-    // Ensure cookie is set in response headers
-    // The cookie should already be set via cookieStore.set(), but we'll log it for debugging
-    console.log("[Return Items] Cookie should be set:", {
-      anonymousCookie: cookieStore.get(ANONYMOUS_USER_COOKIE)?.value,
-      user_id,
-    });
-    
-    return response;
   } catch (error) {
     console.error("[Return Items] ❌ Error adding return item:", error);
-    console.error("[Return Items] Error details:", {
-      message: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined,
-    });
     return NextResponse.json(
       { 
         error: "Failed to add return item", 
-        details: error instanceof Error ? error.message : "Unknown error",
-        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+        details: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 500 }
     );
   }
 }
-

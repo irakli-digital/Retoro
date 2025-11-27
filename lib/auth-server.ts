@@ -7,9 +7,9 @@ const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 /**
  * Get the current user ID from session token (Server-side only)
  * For anonymous users, checks for anonymous cookie
- * Returns a default user ID if session doesn't exist (session will be set client-side)
+ * Returns null if session doesn't exist
  */
-export async function getUserId(): Promise<string> {
+export async function getUserId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
@@ -41,17 +41,12 @@ export async function getUserId(): Promise<string> {
       return anonymousUserId;
     }
     
-    // No session and no anonymous cookie - return default
-    // This will be initialized client-side via /api/auth/init
-    console.log("[getUserId] ⚠️ No session or anonymous cookie found, returning demo-user-123");
-    console.log("[getUserId] Available cookies:", {
-      sessionCookie: cookieStore.get(SESSION_COOKIE)?.value ? "exists" : "missing",
-      anonymousCookie: cookieStore.get(ANONYMOUS_USER_COOKIE)?.value ? "exists" : "missing",
-    });
-    return "demo-user-123";
+    // No session and no anonymous cookie - return null
+    console.log("[getUserId] ⚠️ No session or anonymous cookie found");
+    return null;
   } catch (error) {
     console.error("Error reading session:", error);
-    return "demo-user-123";
+    return null;
   }
 }
 

@@ -6,9 +6,9 @@ const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
  * Get anonymous user ID from client-side (for anonymous sessions before login)
  * Note: Authenticated sessions use httpOnly cookies and are handled server-side only
  */
-export function getUserIdClient(): string {
+export function getUserIdClient(): string | null {
   if (typeof window === "undefined") {
-    return "demo-user-123"; // Fallback for SSR
+    return null; // No client-side user ID during SSR
   }
 
   // Try to get anonymous user ID from cookie (for anonymous sessions)

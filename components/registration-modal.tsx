@@ -37,6 +37,7 @@ export default function RegistrationModal({
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [method, setMethod] = useState<"email" | "magic-link">("magic-link")
+  const [mode, setMode] = useState<"register" | "login">("register")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,31 +47,52 @@ export default function RegistrationModal({
       const anonymousUserId = getUserIdClient()
 
       if (method === "magic-link") {
-        // Send magic link
+        // Send magic link (works for both register and login)
         await axios.post("/api/auth/register/magic-link", {
           email,
-          name: name || null,
+          name: mode === "register" ? (name || null) : null,
           anonymous_user_id: anonymousUserId,
         })
         
         onOpenChange(false)
+        toast.success("Magic link sent! Check your email.")
       } else {
-        // Email + password registration
-        await axios.post("/api/auth/register", {
-          email,
-          password,
-          name: name || null,
-          anonymous_user_id: anonymousUserId,
-        })
+        if (mode === "register") {
+          // Email + password registration
+          await axios.post("/api/auth/register", {
+            email,
+            password,
+            name: name || null,
+            anonymous_user_id: anonymousUserId,
+          })
+          toast.success("Account created successfully!")
+        } else {
+          // Email + password login
+          await axios.post("/api/auth/login", {
+            email,
+            password,
+            anonymous_user_id: anonymousUserId,
+          })
+          toast.success("Logged in successfully!")
+        }
         
         onOpenChange(false)
         router.refresh()
       }
     } catch (error: any) {
-      console.error("Registration error:", error)
-      toast.error(error.response?.data?.error || "Failed to create account")
+      console.error("Authentication error:", error)
+      toast.error(error.response?.data?.error || `Failed to ${mode === "register" ? "create account" : "log in"}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const toggleMode = () => {
+    setMode(mode === "register" ? "login" : "register")
+    // Reset specific fields if needed
+    if (mode === "register") {
+      // Switching to login
+      setName("")
     }
   }
 
@@ -78,18 +100,24 @@ export default function RegistrationModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="ios-rounded max-w-md bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-xl">Save Your Returns</DialogTitle>
+          <DialogTitle className="text-xl">
+            {mode === "register" ? "Save Your Returns" : "Welcome Back"}
+          </DialogTitle>
           <DialogDescription>
-            {itemCount > 0 ? (
-              <>
-                You're tracking <strong>{itemCount} return{itemCount !== 1 ? 's' : ''}</strong>
-                {totalValue > 0 && (
-                  <> worth <strong>${totalValue.toFixed(2)}</strong></>
-                )}
-                . Create an account to save them permanently and get email reminders.
-              </>
+            {mode === "register" ? (
+              itemCount > 0 ? (
+                <>
+                  You're tracking <strong>{itemCount} return{itemCount !== 1 ? 's' : ''}</strong>
+                  {totalValue > 0 && (
+                    <> worth <strong>${totalValue.toFixed(2)}</strong></>
+                  )}
+                  . Create an account to save them permanently.
+                </>
+              ) : (
+                "Create an account to save your returns and get email reminders."
+              )
             ) : (
-              "Create an account to save your returns and get email reminders."
+              "Log in to access your saved returns."
             )}
           </DialogDescription>
         </DialogHeader>
@@ -107,17 +135,19 @@ export default function RegistrationModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Name (Optional)</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="ios-rounded"
-            />
-          </div>
+          {mode === "register" && (
+            <div className="space-y-2">
+              <Label htmlFor="name">Name (Optional)</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="ios-rounded"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -138,16 +168,18 @@ export default function RegistrationModal({
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a password"
+                placeholder={mode === "register" ? "Create a password" : "Enter your password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
                 className="ios-rounded"
               />
-              <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters
-              </p>
+              {mode === "register" && (
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters
+                </p>
+              )}
             </div>
           )}
 
@@ -184,16 +216,30 @@ export default function RegistrationModal({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Account...
+                {mode === "register" ? "Creating Account..." : "Logging In..."}
               </>
             ) : (
-              "Create Account"
+              mode === "register" ? "Create Account" : "Log In"
             )}
           </Button>
 
-          <p className="text-xs text-muted-foreground text-center">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-sm text-primary hover:underline focus:outline-none"
+            >
+              {mode === "register" 
+                ? "Already have an account? Log in" 
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
+
+          {mode === "register" && (
+            <p className="text-xs text-muted-foreground text-center">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          )}
         </form>
       </DialogContent>
     </Dialog>
