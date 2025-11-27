@@ -1,237 +1,325 @@
 {
-  "name": "Retoro - E-commerce Checker",
   "nodes": [
     {
-      "parameters": {},
-      "id": "webhook-trigger",
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300],
-      "webhookId": "ecommerce-check"
-    },
-    {
       "parameters": {
-        "url": "={{ $env.RETORO_API_URL }}/retailers?name={{ $json.body.retailer_name }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-API-Key",
-              "value": "={{ $env.RETORO_API_KEY }}"
-            }
-          ]
-        }
-      },
-      "id": "check-retailer-exists",
-      "name": "Check Retailer Exists",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [450, 300]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "condition-1",
-              "leftValue": "={{ $json.length }}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
         },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "retailer_policies"
+        },
+        "returnAll": true,
         "options": {}
       },
-      "id": "retailer-exists-check",
-      "name": "Retailer Exists?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [650, 300]
-    },
-    {
-      "parameters": {
-        "model": "llama-3.1-sonar-large-128k-online",
-        "messages": {
-          "values": [
-            {
-              "role": "system",
-              "content": "You are a helpful assistant that extracts return policy information from search results. Return ONLY valid JSON."
-            },
-            {
-              "role": "user",
-              "content": "Search for return policy information for {{ $json.body.retailer_name }}. Extract:\n- return_window_days (number, days from purchase)\n- has_free_returns (boolean)\n- policy_description (string, brief)\n- return_portal_url (string, URL to return portal if available)\n- website_url (string, main website URL)\n\nReturn JSON format:\n{\n  \"return_window_days\": 30,\n  \"has_free_returns\": true,\n  \"policy_description\": \"...\",\n  \"return_portal_url\": \"https://...\",\n  \"website_url\": \"https://...\"\n}"
-            }
-          ]
-        },
-        "options": {
-          "temperature": 0.3
-        }
-      },
-      "id": "perplexity-search",
-      "name": "Search with Perplexity",
-      "type": "@n8n/n8n-nodes-langchain.lmChatPerplexity",
-      "typeVersion": 1,
-      "position": [850, 200],
+      "id": "50199152-9dbd-4851-8262-056ee1a993a8",
+      "name": "Get Retailer Policies1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1104,
+        952
+      ],
       "credentials": {
-        "perplexityApi": {
-          "id": "perplexity-credentials",
-          "name": "Perplexity API"
+        "postgres": {
+          "id": "cl2PwpfSNw5e6dDN",
+          "name": "RTR - IC - Postgress"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Parse Perplexity response and extract JSON\nconst response = $input.item.json;\nlet policyData;\n\ntry {\n  // Try to extract JSON from response\n  const jsonMatch = response.content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    policyData = JSON.parse(jsonMatch[0]);\n  } else {\n    policyData = JSON.parse(response.content);\n  }\n} catch (e) {\n  // Fallback: try to extract structured data\n  policyData = {\n    return_window_days: 30, // default\n    has_free_returns: false,\n    policy_description: response.content,\n    return_portal_url: null,\n    website_url: $input.item.json.body.website_url || null\n  };\n}\n\n// Validate and set defaults\nif (!policyData.return_window_days || policyData.return_window_days < 0) {\n  policyData.return_window_days = 30;\n}\n\nif (typeof policyData.has_free_returns !== 'boolean') {\n  policyData.has_free_returns = false;\n}\n\n// Generate retailer ID from name\nconst retailerName = $input.item.json.body.retailer_name;\nconst retailerId = retailerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');\n\nreturn {\n  json: {\n    retailer_id: retailerId,\n    retailer_name: retailerName,\n    return_window_days: policyData.return_window_days,\n    has_free_returns: policyData.has_free_returns,\n    policy_description: policyData.policy_description || null,\n    website_url: policyData.website_url || $input.item.json.body.website_url || null,\n    return_portal_url: policyData.return_portal_url || null,\n    user_id: $input.item.json.body.user_id\n  }\n};"
+        "options": {}
       },
-      "id": "parse-policy-data",
-      "name": "Parse Policy Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1050, 200]
+      "id": "3eecaa00-439c-4ec2-b112-ab40d4146b41",
+      "name": "Process Each Retailer1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        952
+      ]
     },
     {
       "parameters": {
-        "url": "={{ $env.RETORO_API_URL }}/retailers",
-        "method": "POST",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Enhanced Parse AI Response with validation and error handling\nconst retailerName = $('Loop Over Items1').item.json.name || 'Unknown';\nconst retailerId = $('Loop Over Items1').item.json.id;\n\n// Get AI response from Perplexity\nconst aiResponse = $input.item.json.message || $input.item.json.output || $input.item.json.text || '';\n\nconsole.log(`[${retailerName}] Processing AI response...`);\n\nlet policyData = {\n  website_url: null,\n  return_portal_url: null,\n  return_window_days: null,\n  policy_description: null\n};\n\ntry {\n  let parsedData;\n  \n  // Parse JSON response\n  if (typeof aiResponse === 'object') {\n    parsedData = aiResponse;\n  } else {\n    // Extract JSON from markdown code blocks or plain text\n    const codeBlockMatch = aiResponse.match(/```(?:json)?\\s*([\\s\\S]*?)```/);\n    const jsonMatch = codeBlockMatch ? codeBlockMatch[1] : aiResponse.match(/\\{[\\s\\S]*\\}/);\n    \n    if (jsonMatch) {\n      const jsonString = typeof jsonMatch === 'string' ? jsonMatch : jsonMatch[0];\n      parsedData = JSON.parse(jsonString.trim());\n    } else {\n      throw new Error('No JSON structure found in response');\n    }\n  }\n  \n  // Validate and sanitize URLs\n  const validateURL = (url) => {\n    if (!url || url === 'null' || url === 'undefined') return null;\n    try {\n      const urlObj = new URL(url);\n      return (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') ? url : null;\n    } catch {\n      return null;\n    }\n  };\n  \n  // Validate return window days\n  const validateReturnDays = (days) => {\n    if (days === null || days === undefined) return null;\n    const num = parseInt(days);\n    return (!isNaN(num) && num > 0 && num <= 365) ? num : null;\n  };\n  \n  // Extract and validate data\n  policyData.website_url = validateURL(parsedData.website_url);\n  policyData.return_portal_url = validateURL(parsedData.return_portal_url);\n  policyData.return_window_days = validateReturnDays(parsedData.return_window_days) || 30;\n  const rawDesc = parsedData.policy_description?.trim() || null;\n  policyData.policy_description = rawDesc && rawDesc.length > 80 ? rawDesc.substring(0, 77) + '...' : rawDesc;\n  \n  console.log(`[${retailerName}] ✓ Successfully parsed policy data`);\n  \n} catch (error) {\n  console.error(`[${retailerName}] ✗ Failed to parse AI response:`, error.message);\n  console.error(`[${retailerName}] Raw response:`, JSON.stringify(aiResponse).substring(0, 200));\n  \n  // Set defaults when parsing fails\n  policyData.return_window_days = 30;\n  policyData.policy_description = `Parse Error: ${error.message}`;\n}\n\n// Log validation results\nconst validFields = Object.entries(policyData).filter(([k, v]) => v !== null).map(([k]) => k);\nconsole.log(`[${retailerName}] Valid fields: ${validFields.join(', ') || 'none'}`);\n\nreturn {\n  json: {\n    id: retailerId,\n    name: retailerName,\n    website_url: policyData.website_url,\n    return_portal_url: policyData.return_portal_url,\n    return_window_days: policyData.return_window_days,\n    policy_description: policyData.policy_description,\n    updated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "e09e65a4-c969-4058-9279-71c9f0c2c9c9",
+      "name": "Parse AI Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "retailer_policies"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "has_free_returns": false,
+            "name": "={{ $json.name }}",
+            "id": "={{ $json.id }}",
+            "return_window_days": "={{ $json.return_window_days }}",
+            "policy_description": "={{ $json.policy_description }}",
+            "website_url": "={{ $json.website_url }}",
+            "return_portal_url": "={{ $json.return_portal_url }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
             {
-              "name": "name",
-              "value": "={{ $json.retailer_name }}"
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-              "name": "return_window_days",
-              "value": "={{ $json.return_window_days }}"
+              "id": "name",
+              "displayName": "name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
             },
             {
-              "name": "website_url",
-              "value": "={{ $json.website_url }}"
+              "id": "return_window_days",
+              "displayName": "return_window_days",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
             },
             {
-              "name": "policy_description",
-              "value": "={{ $json.policy_description }}"
+              "id": "policy_description",
+              "displayName": "policy_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
             },
             {
-              "name": "has_free_returns",
-              "value": "={{ $json.has_free_returns }}"
+              "id": "website_url",
+              "displayName": "website_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_free_returns",
+              "displayName": "has_free_returns",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "return_portal_url",
+              "displayName": "return_portal_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "abae87aa-090a-408c-890a-6b242ee7626b",
+      "name": "Update Policy Data1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2224,
+        952
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cl2PwpfSNw5e6dDN",
+          "name": "RTR - IC - Postgress"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        832
+      ],
+      "id": "ee3b9f5b-38cc-4922-93f2-d261ca3dae56",
+      "name": "Loop Over Items1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "messages": {
+          "message": [
+            {
+              "content": "=You are a research assistant specialized in finding e-commerce return policies.\n\nRETAILER INFORMATION:\n- Name: {{ $json.name }}\n- Current Website: {{ $json.website_url || 'Unknown' }}\n- Database ID: {{ $json.id }}\n\nYOUR TASK:\n1. Search for the retailer's official website\n2. Find the return policy page URL\n3. IMPORTANT: Find the return portal URL (where customers START a return - look for \"Start Return\", \"Return Portal\", \"My Returns\", etc.)\n4. Extract the return window period (in days)\n5. Create an ULTRA-BRIEF policy summary (MAX 80 characters)\n\nOUTPUT REQUIREMENTS:\n- Return ONLY valid JSON, no additional text\n- Use null for fields you cannot find\n- Ensure URLs are complete and valid (start with http:// or https://)\n- Return window should be a number (days) or null\n- policy_description MUST be MAX 80 characters! Examples:\n  ✓ \"30-day returns, free shipping\"\n  ✓ \"7-day money-back guarantee\"\n  ✓ \"14 days, original packaging required\"\n  ✗ DO NOT write paragraphs or long explanations!\n\nJSON SCHEMA:\n```json\n{\n  \"website_url\": \"string or null - Official website URL\",\n  \"return_portal_url\": \"string or null - URL where customers can START/INITIATE returns\",\n  \"return_window_days\": \"number or null - Number of days for returns\",\n  \"policy_description\": \"string or null - MAX 80 characters!\"\n}\n```\n\nEXAMPLE OUTPUT:\n```json\n{\n  \"website_url\": \"https://example.com\",\n  \"return_portal_url\": \"https://example.com/account/returns/start\",\n  \"return_window_days\": 30,\n  \"policy_description\": \"30-day free returns, original packaging required\"\n}\n```\n\nNow research the retailer: {{ $json.name }}"
             }
           ]
         },
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-API-Key",
-              "value": "={{ $env.RETORO_API_KEY }}"
-            }
-          ]
+        "simplify": true,
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexity",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        880
+      ],
+      "id": "36c23add-de4a-4a89-ac85-45d7c1fca5ed",
+      "name": "Message a model1",
+      "credentials": {
+        "perplexityApi": {
+          "id": "hG7degYGm73MEg7V",
+          "name": "Perplexity account"
         }
-      },
-      "id": "add-retailer",
-      "name": "Add Retailer to Database",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [1250, 200]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Format response for existing retailer\nconst retailer = $input.item.json[0];\nreturn {\n  json: {\n    retailer_id: retailer.id,\n    retailer_name: retailer.name,\n    return_window_days: retailer.return_window_days,\n    has_free_returns: retailer.has_free_returns,\n    website_url: retailer.website_url,\n    return_portal_url: retailer.return_portal_url || null,\n    status: 'existing'\n  }\n};"
-      },
-      "id": "format-existing",
-      "name": "Format Existing Retailer",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [850, 400]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Format response for created retailer\nconst retailer = $input.item.json;\nreturn {\n  json: {\n    retailer_id: retailer.id,\n    retailer_name: retailer.name,\n    return_window_days: retailer.return_window_days,\n    has_free_returns: retailer.has_free_returns,\n    website_url: retailer.website_url,\n    return_portal_url: retailer.return_portal_url || null,\n    status: 'created'\n  }\n};"
-      },
-      "id": "format-created",
-      "name": "Format Created Retailer",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1450, 200]
+      }
     },
     {
       "parameters": {},
-      "id": "merge-output",
-      "name": "Merge Output",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 2.1,
-      "position": [1650, 300]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}"
-      },
-      "id": "webhook-response",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
+      "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [1850, 300]
+      "position": [
+        880,
+        944
+      ],
+      "id": "f9b5bc55-7b21-4700-9c34-552ce0f09890",
+      "name": "When clicking ‘Execute workflow’"
     }
   ],
   "connections": {
-    "Webhook Trigger": {
-      "main": [[{ "node": "Check Retailer Exists", "type": "main", "index": 0 }]]
-    },
-    "Check Retailer Exists": {
-      "main": [[{ "node": "Retailer Exists?", "type": "main", "index": 0 }]]
-    },
-    "Retailer Exists?": {
+    "Get Retailer Policies1": {
       "main": [
         [
-          { "node": "Format Existing Retailer", "type": "main", "index": 0 }
-        ],
-        [
-          { "node": "Search with Perplexity", "type": "main", "index": 0 }
+          {
+            "node": "Process Each Retailer1",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Search with Perplexity": {
-      "main": [[{ "node": "Parse Policy Data", "type": "main", "index": 0 }]]
+    "Process Each Retailer1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Parse Policy Data": {
-      "main": [[{ "node": "Add Retailer to Database", "type": "main", "index": 0 }]]
+    "Parse AI Response1": {
+      "main": [
+        [
+          {
+            "node": "Update Policy Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Add Retailer to Database": {
-      "main": [[{ "node": "Format Created Retailer", "type": "main", "index": 0 }]]
+    "Update Policy Data1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Format Existing Retailer": {
-      "main": [[{ "node": "Merge Output", "type": "main", "index": 0 }]]
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Format Created Retailer": {
-      "main": [[{ "node": "Merge Output", "type": "main", "index": 0 }]]
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Merge Output": {
-      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Retailer Policies1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 1,
-  "updatedAt": "2025-11-26T00:00:00.000Z",
-  "versionId": "1"
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c0320382499acc1816c05e1130ede806d6731eecdef3b30ac30aabf4236c8764"
+  }
 }
-

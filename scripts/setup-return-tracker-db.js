@@ -74,16 +74,16 @@ async function setupDatabase() {
     console.log('📋 Seeding retailer policies...');
     await sql`
       INSERT INTO retailer_policies (id, name, return_window_days, policy_description, website_url, has_free_returns) VALUES
-      ('zara', 'Zara', 30, '30 days from delivery date', 'https://www.zara.com/us/en/help/returns', false),
-      ('nordstrom', 'Nordstrom', 0, 'No deadline - free returns', 'https://www.nordstrom.com/browse/customer-service/return-policy', true),
-      ('asos', 'ASOS', 28, '28 days from delivery', 'https://www.asos.com/customer-care/returns/', true),
-      ('macys', 'Macy''s', 90, '90 days from purchase', 'https://www.macys.com/service/returns/index', false),
-      ('target', 'Target', 90, '90 days for most items', 'https://www.target.com/help/returns-exchanges', false),
-      ('amazon', 'Amazon', 30, '30 days from delivery', 'https://www.amazon.com/gp/help/customer/display.html', true),
-      ('h-m', 'H&M', 30, '30 days from purchase', 'https://www2.hm.com/en_us/customer-service/returns.html', false),
-      ('gap', 'Gap', 30, '30 days from purchase', 'https://www.gap.com/customer-service/returns', true),
-      ('old-navy', 'Old Navy', 30, '30 days from purchase', 'https://oldnavy.gap.com/customer-service/returns', true),
-      ('banana-republic', 'Banana Republic', 30, '30 days from purchase', 'https://bananarepublic.gap.com/customer-service/returns', true)
+      ('zara', 'zara.com', 30, '30 days from delivery date', 'https://www.zara.com/us/en/help/returns', false),
+      ('nordstrom', 'nordstrom.com', 0, 'No deadline - free returns', 'https://www.nordstrom.com/browse/customer-service/return-policy', true),
+      ('asos', 'asos.com', 28, '28 days from delivery', 'https://www.asos.com/customer-care/returns/', true),
+      ('macys', 'macys.com', 90, '90 days from purchase', 'https://www.macys.com/service/returns/index', false),
+      ('target', 'target.com', 90, '90 days for most items', 'https://www.target.com/help/returns-exchanges', false),
+      ('amazon', 'amazon.com', 30, '30 days from delivery', 'https://www.amazon.com/gp/help/customer/display.html', true),
+      ('h-m', 'hm.com', 30, '30 days from purchase', 'https://www2.hm.com/en_us/customer-service/returns.html', false),
+      ('gap', 'gap.com', 30, '30 days from purchase', 'https://www.gap.com/customer-service/returns', true),
+      ('old-navy', 'oldnavy.gap.com', 30, '30 days from purchase', 'https://oldnavy.gap.com/customer-service/returns', true),
+      ('banana-republic', 'bananarepublic.gap.com', 30, '30 days from purchase', 'https://bananarepublic.gap.com/customer-service/returns', true)
       ON CONFLICT (id) DO NOTHING
     `;
     

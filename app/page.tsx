@@ -14,6 +14,7 @@ import { Suspense } from "react";
 import { CurrencyDisplay } from "@/components/currency-display";
 import { CurrencyTotal } from "@/components/currency-total";
 import DashboardItemsList from "@/components/dashboard-items-list";
+import ContextualOnboarding from "@/components/contextual-onboarding";
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,12 @@ export default async function DashboardPage() {
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
+          {/* Contextual Onboarding - Shows welcome guide for first-time users */}
+          <ContextualOnboarding 
+            itemCount={returnItems.length}
+            isAuthenticated={isAuthenticated}
+          />
+
           {/* Registration Banner - Only show for anonymous users */}
           {!isAuthenticated && returnItems.length > 0 && (
             <div className="mb-6">
@@ -116,23 +123,7 @@ export default async function DashboardPage() {
           )}
 
           {/* Return Items List */}
-          {returnItems.length === 0 ? (
-            <Card className="ios-rounded text-center py-12">
-              <CardContent>
-                <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">No active returns</h3>
-                <p className="text-muted-foreground mb-6 text-sm">
-                  Start tracking your purchases by adding your first item
-                </p>
-                <Button asChild variant="shopify" className="ios-rounded">
-                  <Link href="/add">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Your First Purchase
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
+          {returnItems.length > 0 && (
             <DashboardItemsList items={returnItems} preferredCurrency={preferredCurrency} />
           )}
         </div>
