@@ -1,20 +1,19 @@
 import { Metadata } from "next";
 import { getActiveReturnItemsByUserId, getAllRetailerPolicies, getUserById } from "@/lib/queries";
-import { getDaysRemaining, formatDaysRemaining, getUrgencyColor, getUrgencyBadgeVariant } from "@/lib/return-logic";
+import { getDaysRemaining } from "@/lib/return-logic";
 import { getUserId, getCurrentUser } from "@/lib/auth-server";
 import AppHeader from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, ExternalLink, Calendar, DollarSign, ChevronRight } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import RegistrationBanner from "@/components/registration-banner";
 import OAuthHandler from "@/components/oauth-handler";
 import { Suspense } from "react";
 import { CurrencyDisplay } from "@/components/currency-display";
 import { CurrencyTotal } from "@/components/currency-total";
+import DashboardItemsList from "@/components/dashboard-items-list";
 
 export const dynamic = 'force-dynamic';
 
@@ -134,73 +133,7 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2.5">
-              {returnItems.map((item) => {
-                const daysRemaining = getDaysRemaining(new Date(item.return_deadline));
-                const urgencyColor = getUrgencyColor(daysRemaining);
-                const badgeVariant = getUrgencyBadgeVariant(daysRemaining);
-                const retailer = item.retailer;
-
-                return (
-                  <Link key={item.id} href={`/items/${item.id}`}>
-                    <Card className="ios-rounded ios-shadow hover:shadow-lg active:scale-[0.99] transition-all ios-tap-highlight cursor-pointer group">
-                      <CardContent className="p-4">
-                        {/* Header: Product name and days remaining */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 min-w-0 pr-3">
-                            <h3 className="text-base font-semibold mb-1 truncate">
-                              {item.name || "Unnamed Item"}
-                            </h3>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {retailer && (
-                                <>
-                                  <span>{retailer.name}</span>
-                                  {retailer.has_free_returns && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                                      Free Returns
-                                    </Badge>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <Badge 
-                            variant={badgeVariant}
-                            className={cn("text-xs font-medium shrink-0", urgencyColor)}
-                          >
-                            {formatDaysRemaining(daysRemaining)}
-                          </Badge>
-                        </div>
-
-                        {/* Info row: Date and Price */}
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-4 text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span className="text-xs">
-                                {format(new Date(item.return_deadline), "MMM d")}
-                              </span>
-                            </div>
-                            {item.price && (
-                              <div className="flex items-center gap-1.5">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                <CurrencyDisplay
-                                  amount={item.price}
-                                  originalCurrency={item.original_currency || 'USD'}
-                                  preferredCurrency={preferredCurrency}
-                                  className="text-xs font-medium text-foreground"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
+            <DashboardItemsList items={returnItems} preferredCurrency={preferredCurrency} />
           )}
         </div>
       </main>
