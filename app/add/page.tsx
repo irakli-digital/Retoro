@@ -23,6 +23,14 @@ import { CalendarIcon, Loader2, Plus, ExternalLink, Search, X, Upload, Image as 
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import axios from "axios"
+import { COMMON_CURRENCIES, getCurrencySymbol } from "@/lib/currency"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 // user_id is now handled server-side via session, no need to import getUserIdClient
 
 interface RetailerPolicy {
@@ -43,10 +51,14 @@ export default function AddPurchasePage() {
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  const [preferredCurrency, setPreferredCurrency] = useState("USD")
+  const [loadingCurrency, setLoadingCurrency] = useState(true)
+  
   const [formData, setFormData] = useState({
     retailerId: "",
     name: "",
     price: "",
+    currency: "USD", // Will be set to user's preferred currency
     purchaseDate: new Date(), // Default to today
   })
 
@@ -62,6 +74,23 @@ export default function AddPurchasePage() {
     has_free_returns: false,
   })
   const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Load user's preferred currency
+    const loadCurrency = async () => {
+      try {
+        const response = await axios.get("/api/settings/currency")
+        const currency = response.data.currency || "USD"
+        setPreferredCurrency(currency)
+        setFormData(prev => ({ ...prev, currency }))
+      } catch (error) {
+        console.error("Error loading currency:", error)
+      } finally {
+        setLoadingCurrency(false)
+      }
+    }
+    loadCurrency()
+  }, [])
 
   useEffect(() => {
     // Fetch retailers
@@ -244,6 +273,7 @@ export default function AddPurchasePage() {
         retailer_id: formData.retailerId,
         name: formData.name || null,
         price: formData.price ? parseFloat(formData.price) : null,
+        currency: formData.currency,
         purchase_date: purchaseDate.toISOString(),
       })
 
@@ -466,17 +496,36 @@ export default function AddPurchasePage() {
 
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm text-muted-foreground">Price (optional)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="ios-rounded h-12 pl-7"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {getCurrencySymbol(formData.currency)}
+                  </span>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="ios-rounded h-12 pl-7"
+                  />
+                </div>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                >
+                  <SelectTrigger className="w-[140px] ios-rounded h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMON_CURRENCIES.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        {curr.code} ({curr.symbol})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

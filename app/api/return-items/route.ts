@@ -4,7 +4,7 @@ import { calculateDeadline } from "@/lib/return-logic";
 import { getRetailerPolicy } from "@/lib/queries";
 import { getUserId } from "@/lib/auth-server";
 import { cookies } from "next/headers";
-import { convertCurrency, isValidCurrency } from "@/lib/currency";
+import { convertCurrency, isValidCurrency, getCurrencySymbol } from "@/lib/currency";
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +110,9 @@ export async function POST(request: NextRequest) {
     // Validate and normalize currency
     const currency = isValidCurrency(original_currency) ? original_currency.toUpperCase() : 'USD';
     
+    // Derive currency_symbol from currency if not provided
+    const finalCurrencySymbol = currency_symbol || getCurrencySymbol(currency);
+    
     // Convert price to USD if needed
     let price_usd: number | null = null;
     if (price !== null && price !== undefined) {
@@ -134,7 +137,7 @@ export async function POST(request: NextRequest) {
       price: price || null,
       original_currency: currency,
       price_usd: price_usd,
-      currency_symbol: currency_symbol || '',
+      currency_symbol: finalCurrencySymbol,
       purchase_date: purchaseDate,
       return_deadline: returnDeadline,
       is_returned: false,

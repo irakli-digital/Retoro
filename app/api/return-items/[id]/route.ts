@@ -8,6 +8,7 @@ import {
 import { calculateDeadline } from "@/lib/return-logic";
 import { getUserId } from "@/lib/auth-server";
 import { cookies } from "next/headers";
+import { isValidCurrency, getCurrencySymbol, convertCurrency } from "@/lib/currency";
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { retailer_id, name, price, purchase_date, user_id, currency_symbol } = body;
+    const { retailer_id, name, price, purchase_date, user_id, currency: original_currency, currency_symbol } = body;
 
     if (!retailer_id || !purchase_date || !user_id) {
       return NextResponse.json(
@@ -83,12 +84,38 @@ export async function PUT(
     const purchaseDate = new Date(purchase_date);
     const returnDeadline = calculateDeadline(purchaseDate, policy);
 
+    // Handle currency if provided
+    let currency = existingItem.original_currency;
+    let finalCurrencySymbol = existingItem.currency_symbol || '';
+    let price_usd = existingItem.price_usd;
+    
+    if (original_currency) {
+      currency = isValidCurrency(original_currency) ? original_currency.toUpperCase() : currency;
+      finalCurrencySymbol = currency_symbol !== undefined ? currency_symbol : getCurrencySymbol(currency);
+      
+      // Recalculate price_usd if currency changed
+      if (price !== null && price !== undefined) {
+        if (currency === 'USD') {
+          price_usd = price;
+        } else {
+          try {
+            price_usd = await convertCurrency(price, currency, 'USD');
+          } catch (error) {
+            console.error(`[Return Items PUT] Currency conversion failed:`, error);
+            price_usd = price; // Fallback
+          }
+        }
+      }
+    } else if (currency_symbol !== undefined) {
+      finalCurrencySymbol = currency_symbol || '';
+    }
+
     // Update item (we'll need to add an updateReturnItem function)
     // For now, we'll use a direct SQL update
     const { neon } = await import("@neondatabase/serverless");
     const sql = neon(process.env.DATABASE_URL!);
     
-    // Build update query dynamically to include currency_symbol if provided
+    // Build update query dynamically
     const updateFields = [
       sql`retailer_id = ${retailer_id}`,
       sql`name = ${name || null}`,
@@ -98,9 +125,15 @@ export async function PUT(
       sql`updated_at = NOW()`
     ];
     
-    // Add currency_symbol if provided
-    if (currency_symbol !== undefined) {
-      updateFields.push(sql`currency_symbol = ${currency_symbol || ''}`);
+    // Add currency fields if currency was provided
+    if (original_currency) {
+      updateFields.push(sql`original_currency = ${currency}`);
+      updateFields.push(sql`currency_symbol = ${finalCurrencySymbol}`);
+      if (price_usd !== null && price_usd !== undefined) {
+        updateFields.push(sql`price_usd = ${price_usd}`);
+      }
+    } else if (currency_symbol !== undefined) {
+      updateFields.push(sql`currency_symbol = ${finalCurrencySymbol}`);
     }
     
     const result = await sql`
