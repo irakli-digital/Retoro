@@ -223,12 +223,48 @@ export async function DELETE(
 ) {
   try {
     const { searchParams } = new URL(request.url);
-    const user_id = searchParams.get("user_id");
+    const provided_user_id = searchParams.get("user_id");
 
-    if (!user_id) {
+    // Get user ID - prioritize authenticated session over provided user_id
+    let user_id = await getUserId();
+    
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("retoro_session")?.value;
+    
+    console.log("[Return Items DELETE] User ID check:", {
+      userIdFromGetUserId: user_id,
+      providedUserId: provided_user_id,
+      hasSessionToken: !!sessionToken,
+      isDemoUser: user_id === "demo-user-123",
+    });
+    
+    // If user is not authenticated, use provided user_id or anonymous cookie
+    if (user_id === "demo-user-123") {
+      if (provided_user_id) {
+        user_id = provided_user_id;
+        console.log("[Return Items DELETE] Using provided user_id (anonymous):", user_id);
+      } else {
+        // Try anonymous cookie
+        const anonymousUserId = cookieStore.get(ANONYMOUS_USER_COOKIE)?.value;
+        if (anonymousUserId) {
+          user_id = anonymousUserId;
+          console.log("[Return Items DELETE] Using anonymous user ID from cookie:", user_id);
+        } else {
+          return NextResponse.json(
+            { error: "User ID required" },
+            { status: 401 }
+          );
+        }
+      }
+    } else {
+      console.log("[Return Items DELETE] ✅ Using authenticated user ID:", user_id);
+      // User is authenticated - always use their real user ID, ignore provided_user_id
+    }
+
+    if (!user_id || user_id === "demo-user-123") {
       return NextResponse.json(
-        { error: "User ID required" },
-        { status: 400 }
+        { error: "Unable to determine user session" },
+        { status: 401 }
       );
     }
 
@@ -242,6 +278,10 @@ export async function DELETE(
     }
 
     if (existingItem.user_id !== user_id) {
+      console.error("[Return Items DELETE] Unauthorized:", {
+        itemUserId: existingItem.user_id,
+        requestUserId: user_id,
+      });
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -249,6 +289,11 @@ export async function DELETE(
     }
 
     await deleteReturnItem(params.id, user_id);
+
+    console.log("[Return Items DELETE] ✅ Successfully deleted item:", {
+      itemId: params.id,
+      userId: user_id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
