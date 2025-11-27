@@ -22,6 +22,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import ReturnItemActions from "@/components/return-item-actions";
+import { formatCurrency, getCurrencySymbol, formatNumberWithCommas } from "@/lib/currency";
 
 export const metadata: Metadata = {
   title: "Return Item Details - Return Tracker",
@@ -132,9 +133,21 @@ export default async function ReturnItemDetailsPage({
             <CardContent className="space-y-4">
               {/* Price */}
               {item.price && (
-                <div className="flex items-center justify-between py-2 ios-separator">
-                  <span className="text-sm text-muted-foreground">Price</span>
-                  <span className="font-semibold text-lg">${Number(item.price).toFixed(2)}</span>
+                <div className="py-2 ios-separator">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">Price</span>
+                    <div className="text-right">
+                      <div className="font-semibold text-lg">
+                        {item.currency_symbol || getCurrencySymbol(item.original_currency || 'USD')}
+                        {formatNumberWithCommas(Number(item.price))}
+                      </div>
+                      {item.original_currency && item.original_currency !== 'USD' && item.price_usd && (
+                        <div className="text-sm text-muted-foreground mt-0.5">
+                          ≈ {formatCurrency(item.price_usd, 'USD')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

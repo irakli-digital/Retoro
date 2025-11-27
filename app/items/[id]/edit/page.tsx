@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -154,6 +152,35 @@ export default function EditItemPage() {
     }
   }
 
+  const formatPriceInput = (value: string): string => {
+    // Remove all non-digit characters except decimal point
+    const cleaned = value.replace(/[^\d.]/g, '')
+    
+    // Handle multiple decimal points - keep only the first one
+    const parts = cleaned.split('.')
+    let formatted = parts[0]
+    if (parts.length > 1) {
+      formatted += '.' + parts.slice(1).join('').substring(0, 2) // Max 2 decimal places
+    }
+    
+    // Add comma separators for thousands
+    if (formatted) {
+      const numberPart = formatted.split('.')[0]
+      const decimalPart = formatted.split('.')[1]
+      const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      return decimalPart !== undefined ? `${formattedNumber}.${decimalPart}` : formattedNumber
+    }
+    
+    return formatted
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // Store the raw value (without commas) for calculations
+    const rawValue = value.replace(/,/g, '')
+    setFormData({ ...formData, price: rawValue })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -227,7 +254,7 @@ export default function EditItemPage() {
               <Input
                 id="retailer"
                 type="text"
-                placeholder="Search retailers..."
+                placeholder="Choose retailers..."
                 value={retailerSearch}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setShowRetailerResults(true)}
@@ -275,35 +302,23 @@ export default function EditItemPage() {
             )}
           </div>
 
-          {/* Purchase Date */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Purchase Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal ios-rounded h-12",
-                    !formData.purchaseDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.purchaseDate ? (
-                    format(formData.purchaseDate, "MMM d, yyyy")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.purchaseDate}
-                  onSelect={(date) => date && setFormData({ ...formData, purchaseDate: date })}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+          {/* Purchase Date - Native Date Input for Mobile */}
+          <div className="relative">
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground pointer-events-none z-10" />
+            <Input
+              type="date"
+              value={formData.purchaseDate ? format(formData.purchaseDate, "yyyy-MM-dd") : ""}
+              onChange={(e) => {
+                const dateValue = e.target.value
+                if (dateValue) {
+                  setFormData({ ...formData, purchaseDate: new Date(dateValue) })
+                }
+              }}
+              className="ios-rounded h-12 pl-10 pr-4 appearance-none date-input-no-indicator w-full"
+              style={{
+                colorScheme: 'dark',
+              }}
+            />
           </div>
 
           {/* Optional Details */}
@@ -328,11 +343,11 @@ export default function EditItemPage() {
                   </span>
                   <Input
                     id="price"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="00.00"
+                    value={formData.price ? formatPriceInput(formData.price) : ''}
+                    onChange={handlePriceChange}
                     className="ios-rounded h-12 pl-10 w-full"
                   />
                 </div>

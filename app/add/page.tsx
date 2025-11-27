@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Dialog,
   DialogContent,
@@ -19,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { CalendarIcon, Loader2, Plus, ExternalLink, Search, X, Upload, Image as ImageIcon } from "lucide-react"
+import { CalendarIcon, Loader2, Plus, Search, X, Upload, Image as ImageIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import axios from "axios"
@@ -139,6 +137,35 @@ export default function AddPurchasePage() {
       setSelectedRetailer(null)
       setFormData({ ...formData, retailerId: "" })
     }
+  }
+
+  const formatPriceInput = (value: string): string => {
+    // Remove all non-digit characters except decimal point
+    const cleaned = value.replace(/[^\d.]/g, '')
+    
+    // Handle multiple decimal points - keep only the first one
+    const parts = cleaned.split('.')
+    let formatted = parts[0]
+    if (parts.length > 1) {
+      formatted += '.' + parts.slice(1).join('').substring(0, 2) // Max 2 decimal places
+    }
+    
+    // Add comma separators for thousands
+    if (formatted) {
+      const numberPart = formatted.split('.')[0]
+      const decimalPart = formatted.split('.')[1]
+      const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      return decimalPart !== undefined ? `${formattedNumber}.${decimalPart}` : formattedNumber
+    }
+    
+    return formatted
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // Store the raw value (without commas) for calculations
+    const rawValue = value.replace(/,/g, '')
+    setFormData({ ...formData, price: rawValue })
   }
 
   const handleAddNewClick = () => {
@@ -321,7 +348,7 @@ export default function AddPurchasePage() {
                   <div className="p-2 rounded-full bg-primary/20">
                     <ImageIcon className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="text-sm font-medium">Or upload invoice (image, PDF, or document)</span>
+                  <span className="text-sm font-medium">Upload invoice (image, PDF, or document)</span>
                 </div>
                 <input
                   ref={fileInputRef}
@@ -386,16 +413,24 @@ export default function AddPurchasePage() {
 
         {/* Hide form when uploading invoice */}
         {!uploadingInvoice && (
-          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
-          {/* Retailer Selection - Live Search */}
-          <div className="space-y-2 relative">
-            <Label htmlFor="retailer" className="text-sm font-medium">Retailer</Label>
+          <>
+            {/* Divider with OR */}
+            <div className="max-w-2xl mx-auto my-6 flex items-center gap-4">
+              <div className="flex-1 h-px bg-border"></div>
+              <span className="text-sm font-medium text-muted-foreground px-3">OR</span>
+              <div className="flex-1 h-px bg-border"></div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+            <h2 className="text-lg font-semibold mb-4">Add item details</h2>
+            {/* Retailer Selection - Live Search */}
+          <div className="relative">
             <div className="relative" ref={searchRef}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground" />
               <Input
                 id="retailer"
                 type="text"
-                placeholder="Search retailers..."
+                placeholder="Search or choose retailer"
                 value={retailerSearch}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setShowRetailerResults(true)}
@@ -466,52 +501,38 @@ export default function AddPurchasePage() {
             )}
           </div>
 
-          {/* Purchase Date - Quick Access */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Purchase Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal ios-rounded h-12",
-                    !formData.purchaseDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.purchaseDate ? (
-                    format(formData.purchaseDate, "MMM d, yyyy")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.purchaseDate}
-                  onSelect={(date) => date && setFormData({ ...formData, purchaseDate: date })}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+          {/* Purchase Date - Native Date Input for Mobile */}
+          <div className="relative">
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground pointer-events-none z-10" />
+            <Input
+              type="date"
+              value={formData.purchaseDate ? format(formData.purchaseDate, "yyyy-MM-dd") : ""}
+              onChange={(e) => {
+                const dateValue = e.target.value
+                if (dateValue) {
+                  setFormData({ ...formData, purchaseDate: new Date(dateValue) })
+                }
+              }}
+              className="ios-rounded h-12 pl-10 pr-4 w-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              style={{
+                colorScheme: 'dark',
+              }}
+            />
           </div>
 
           {/* Optional Details - Collapsed by Default */}
           <div className="space-y-3 pt-2">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm text-muted-foreground">Item Name (optional)</Label>
+            <div>
               <Input
                 id="name"
-                placeholder="e.g., Black Dress"
+                placeholder="Item name, e.g., Black Dress"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="ios-rounded h-12"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="price" className="text-sm text-muted-foreground">Price (optional)</Label>
+            <div>
               <div className="flex gap-3">
                 <div className="relative flex-1 min-w-0">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10 font-medium">
@@ -519,11 +540,11 @@ export default function AddPurchasePage() {
                   </span>
                   <Input
                     id="price"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="00.00"
+                    value={formData.price ? formatPriceInput(formData.price) : ''}
+                    onChange={handlePriceChange}
                     className="ios-rounded h-12 pl-10 w-full"
                   />
                 </div>
@@ -573,20 +594,8 @@ export default function AddPurchasePage() {
               "Add Purchase"
             )}
           </Button>
-
-          {/* Request Official Retailer Link */}
-          <div className="text-center pt-4">
-            <a
-              href="https://forms.gle/your-form-url-here"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-            >
-              Request official retailer addition
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
         </form>
+        </>
         )}
       </main>
 

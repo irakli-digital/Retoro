@@ -162,12 +162,51 @@ export async function getExchangeRate(
 }
 
 /**
- * Format currency amount with symbol
+ * Format number with comma separators for thousands
+ */
+export function formatNumberWithCommas(num: number): string {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Format large numbers with K/KK notation
+ * K = thousands (e.g., 1.5K = 1,500)
+ * KK = millions (e.g., 2.3KK = 2,300,000)
+ */
+export function formatLargeNumber(num: number): string {
+  if (num >= 1000000) {
+    // KK = millions abbreviation
+    const millions = num / 1000000;
+    return millions % 1 === 0 ? `${millions}KK` : `${millions.toFixed(1)}KK`;
+  } else if (num >= 1000) {
+    // K = thousands abbreviation
+    const thousands = num / 1000;
+    return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`;
+  }
+  return formatNumberWithCommas(num);
+}
+
+/**
+ * Format currency amount with symbol and comma separators
  */
 export function formatCurrency(amount: number | null | undefined, currency: string = 'USD'): string {
   const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] || currency.toUpperCase();
   const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || 0)) || 0;
-  return `${symbol}${numAmount.toFixed(2)}`;
+  return `${symbol}${formatNumberWithCommas(numAmount)}`;
+}
+
+/**
+ * Format currency amount with symbol, using K/KK notation for large amounts
+ * K = thousands, KK = millions
+ */
+export function formatCurrencyCompact(amount: number | null | undefined, currency: string = 'USD'): string {
+  const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] || currency.toUpperCase();
+  const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || 0)) || 0;
+  
+  if (numAmount >= 1000) {
+    return `${symbol}${formatLargeNumber(numAmount)}`;
+  }
+  return formatCurrency(amount, currency);
 }
 
 /**

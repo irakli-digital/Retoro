@@ -1,10 +1,12 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Package, Plus } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 interface ContextualOnboardingProps {
   itemCount: number
@@ -22,6 +24,18 @@ export default function ContextualOnboarding({
     return (
       <Card className="ios-rounded border-primary/20 bg-primary/5 mb-6">
         <CardContent className="p-6">
+          {/* Mockup Image */}
+          <div className="mb-6 pt-6 flex justify-center">
+            <Image
+              src="/images/mockup.webp"
+              alt="App mockup"
+              width={800}
+              height={600}
+              className="w-[70%] h-auto ios-rounded-lg object-cover"
+              priority
+            />
+          </div>
+          
           {/* Add Button - Top */}
           <Button
             asChild

@@ -328,11 +328,69 @@ html body {
 
 /* Sonner toast spacing - avoid covering bottom tab bar on mobile */
 [data-sonner-toaster] {
-  bottom: 70px !important;
+  bottom: calc(49px + env(safe-area-inset-bottom, 0px) + 20px) !important; /* Tab bar + safe-bottom + margin */
 }
 
 @media (min-width: 768px) {
   [data-sonner-toaster] {
     bottom: 16px !important;
+  }
+}
+
+/* Native date input styling for better mobile UX */
+input[type="date"],
+input.date-input-no-indicator {
+  position: relative;
+}
+
+/* Ensure no native date picker UI elements are visible */
+input[type="date"],
+input.date-input-no-indicator {
+  background-image: none !important;
+}
+
+/* Hide the native calendar picker indicator since we have our own icon */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input.date-input-no-indicator::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  cursor: default !important;
+  background: transparent !important;
+  color: transparent !important;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button,
+input.date-input-no-indicator::-webkit-inner-spin-button,
+input.date-input-no-indicator::-webkit-clear-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Firefox */
+input[type="date"]::-moz-calendar-picker-indicator,
+input.date-input-no-indicator::-moz-calendar-picker-indicator {
+  display: none !important;
+}
+
+/* Edge/IE */
+input[type="date"]::-ms-clear,
+input[type="date"]::-ms-reveal,
+input.date-input-no-indicator::-ms-clear,
+input.date-input-no-indicator::-ms-reveal {
+  display: none !important;
+}
+
+/* iOS date input styling */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"],
+  input.date-input-no-indicator {
+    min-height: 44px; /* iOS touch target size */
   }
 }

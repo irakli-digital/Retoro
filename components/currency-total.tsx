@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { formatCurrency } from "@/lib/currency"
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency"
 import { Loader2 } from "lucide-react"
 import axios from "axios"
 
@@ -97,6 +97,7 @@ export function CurrencyTotal({ items, preferredCurrency, className = "" }: Curr
   }
 
   const numTotal = typeof total === 'number' ? total : parseFloat(String(total || 0)) || 0
-  return <span className={className}>{formatCurrency(numTotal, preferredCurrency)}</span>
+  // Use compact notation (K/KK) for totals >= 1000
+  return <span className={className}>{formatCurrencyCompact(numTotal, preferredCurrency)}</span>
 }
 
