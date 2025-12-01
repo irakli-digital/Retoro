@@ -8,63 +8,70 @@ const SESSION_COOKIE = "retoro_session";
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
 /**
- * Logout endpoint - deletes session and clears cookies
+ * Helper function to clear cookies on a response
  */
+function clearCookiesOnResponse(response: NextResponse) {
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Clear session cookie
+  response.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  
+  // Clear anonymous cookie
+  response.cookies.set(ANONYMOUS_USER_COOKIE, "", {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  
+  return response;
+}
+
 export async function POST(request: NextRequest) {
+  let sessionToken: string | undefined;
+  
   try {
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
+    sessionToken = cookieStore.get(SESSION_COOKIE)?.value;
 
     // Delete session from database if it exists
     if (sessionToken) {
-      const session = await getSessionByToken(sessionToken);
-      if (session) {
-        await deleteSession(sessionToken);
+      try {
+        const session = await getSessionByToken(sessionToken);
+        if (session) {
+          await deleteSession(sessionToken);
+        }
+      } catch (dbError) {
+        // Log database error but continue with cookie clearing
+        console.error("Error deleting session from database:", dbError);
       }
     }
 
-    // Clear session cookie (must match the path used when setting)
-    cookieStore.set(SESSION_COOKIE, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0, // Expire immediately
-    });
+    // Create response and clear cookies
+    const response = NextResponse.json({ success: true });
+    clearCookiesOnResponse(response);
     
-    // Also clear anonymous cookie if it exists (for cleanup)
-    cookieStore.set(ANONYMOUS_USER_COOKIE, "", {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0, // Expire immediately
-    });
-
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error) {
     console.error("Error during logout:", error);
-    // Still try to clear cookies even if database deletion fails
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-    cookieStore.set(ANONYMOUS_USER_COOKIE, "", {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
     
-    return NextResponse.json(
-      { error: "Failed to logout" },
+    // Even on error, try to clear cookies
+    const errorResponse = NextResponse.json(
+      { error: "Failed to logout", success: false },
       { status: 500 }
     );
+    
+    // Clear cookies on error response too
+    clearCookiesOnResponse(errorResponse);
+    
+    return errorResponse;
   }
 }
 
