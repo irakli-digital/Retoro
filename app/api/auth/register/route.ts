@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUserByEmail, migrateAnonymousData, createMagicLinkToken } from "@/lib/queries";
 import { generateVerificationToken, hashPassword } from "@/lib/auth-utils";
 import { cookies } from "next/headers";
+import { sendVerificationEmail } from "@/lib/mailgun";
 
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
@@ -64,10 +65,15 @@ export async function POST(request: NextRequest) {
     // Store verification token as magic link token
     await createMagicLinkToken(userId, verificationToken, expiresAt);
 
-    // TODO: Send verification email with token
-    // For now, log the token (remove in production)
+    // Send verification email with token
     const verificationLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/verify-email?token=${verificationToken}`;
-    console.log(`Verification link for ${email}: ${verificationLink}`);
+    
+    // Use Mailgun if configured, otherwise log
+    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+      await sendVerificationEmail(email, verificationLink);
+    } else {
+      console.log(`[DEV] Verification link for ${email}: ${verificationLink}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -84,4 +90,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

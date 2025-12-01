@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createUser, getUserByEmail, migrateAnonymousData, createMagicLinkToken } from "@/lib/queries";
 import { generateMagicLinkToken } from "@/lib/auth-utils";
 import { cookies } from "next/headers";
+import { sendMagicLinkEmail } from "@/lib/mailgun";
 
 const ANONYMOUS_USER_COOKIE = "retoro_anonymous_user_id";
 
@@ -56,11 +57,15 @@ export async function POST(request: NextRequest) {
     // Store token in database
     await createMagicLinkToken(userId, token, expiresAt);
 
-    // TODO: Send magic link email with token
-    // For MVP, we'll log it for development
+    // Send magic link email with token
     const magicLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/verify?token=${token}`;
 
-    console.log(`Magic link for ${email}: ${magicLink}`); // Remove in production
+    // Use Mailgun if configured, otherwise log
+    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+      await sendMagicLinkEmail(email, magicLink);
+    } else {
+      console.log(`[DEV] Magic link for ${email}: ${magicLink}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -77,4 +82,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
